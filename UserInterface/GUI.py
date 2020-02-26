@@ -23,8 +23,11 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QMenu, QVBoxLayout, QSize
 from PyQt5.QtGui import QIcon
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
+from scipy import signal
+import math
 
-from Render import RenderCall, Transcript
+from Render import Transcript
+from DSP import stft, FormatAxis
 
 
 class Ui_TranscriptEditor(QMainWindow):
@@ -219,8 +222,18 @@ class Ui_TranscriptEditor(QMainWindow):
     # Need to add audio file things eventually maybe
     def doRender(self):
         self.readTranscript()
-        self.textBrowser.setPlaceholderText('pepepepepeppe') 
-        RenderCall(self.oldTranscript, self.newTranscript)
+        
+        render = self.oldTranscript.RenderTranscription(self.oldTranscript, self.newTranscript, \
+                                                        self.oldTranscript.audio, self.oldTranscript.sr)
+
+        self.textBrowser.setPlaceholderText('Rendered, check next tab') 
+
+        spec = stft(input_sound=render, dft_size=256, hop_size=64, zero_pad=256, window=signal.hann(256))
+        t,f = FormatAxis(spec, self.oldTranscript.sr, len(render)/self.oldTranscript.sr)
+        self.plotNewSpec(spec, t, f)
+
+        self.newTranscript.quicksort()
+        self.setNewTranscriptText(self.newTranscript)
 
     # reads the new timestamps and sets the values
     def readTranscript(self):
@@ -237,34 +250,58 @@ class Ui_TranscriptEditor(QMainWindow):
 
                 # read new word
                 p = 0
-                while text[idx + 5 + p] != ' ':
-                    print('ed: ', text[p])
+                newword = ""
+
+                while text[idx + 6 + p] != ',' :
+                    newword += text[idx + 6 + p]
                     p += 1 
-                newword = text[idx+5 : idx+5+p]
-                offset = 7+p
+                offset = 8+p
                 self.newTranscript.words[i] = newword
                 
                 #  ASSUMING ONLY 1 DECIMAL PLACE
-                start = text[offset:offset+2]
-                end = text[offset+4:offset+6]
-                self.newTranscript.timestamps[i] = (start,end)
+                start = float(text[idx+offset : idx+offset+3])
+                end = float(text[idx+offset+5 : idx+offset+8])
+
+                self.newTranscript.words[i] = word
+                self.newTranscript.timestamps[i] = (start, end)
 
                 i+=1
+                idx += offset + 8
+        
+        
+
+
+
+    def plotNewSpec(self, spec, t, f):
+
+        if(self.newSpecLayer.count() > 0):
+            self.newSpecLayer.removeWidget(self.newSpecWidget)
+
+        m = MplCanvas(self.newspec_plot, width=5, height=4)
+        m.plotOldSpec(spec, t, f)
+        self.newSpecWidget = m
+
+        self.newSpecLayer.addWidget(m)
+
+        self.show()
         
 
     def plotOldSpec(self, spec, t, f):
         l = QtWidgets.QVBoxLayout(self.oldspec_plot)
 
-        m = MplCanvas(self.oldspec_plot, width=5, height=4)
+        if(l.count() > 0):
+            l.removeWidget(self.oldSpecWidget)
+
+        m = MplCanvas(self.newspec_plot, width=5, height=4)
         m.plotOldSpec(spec, t, f)
-        m.move(0,0)
+        self.oldSpecWidget = m
 
         l.addWidget(m)
 
         self.show()
 
     #param: words - transcript.words array
-    def setTranscriptText(self, transcript):
+    def setOldTranscriptText(self, transcript):
         text = ""
         words = transcript.words
         times = transcript.timestamps
@@ -272,6 +309,15 @@ class Ui_TranscriptEditor(QMainWindow):
             text += words[i] + ' ' 
         
         self.oldwords.setText(text)
+
+    def setNewTranscriptText(self, transcript):
+        text = ""
+        words = transcript.words
+        times = transcript.timestamps
+        for i in range(len(words)):
+            text += words[i] + ' '  
+        
+        self.newwords.setText(text)
 
     ## happens only when original transcription is set and on first transcript
     def initTranscriptEditor(self, transcript):
@@ -286,10 +332,17 @@ class Ui_TranscriptEditor(QMainWindow):
         self.textBrowser.setPlaceholderText('[(word #), word, start_time, end_time], (WIP) DONT EDIT WORD NUMBERS AND WORDS')
         self.newwords_2.setText(text)
 
+    def clearLayout(self, layout):
+      while layout.count():
+        child = layout.takeAt(0)
+        if child.widget():
+          child.widget().deleteLater()
+
     ## for hooking up buttons and stuff keep at bottom for function reading
     def setupUiManual(self):
         self.RenderButton.clicked.connect(self.doRender)
-
+        self.newSpecLayer = QtWidgets.QVBoxLayout(self.newspec_plot)
+        #self.oldSpecLayer = QtWidgets.QVBoxLayout(self.oldspec_plot)
 
 ## matplotlib canvas widget class thing
 class MplCanvas(FigureCanvas):
@@ -313,9 +366,9 @@ class MplCanvas(FigureCanvas):
         pass
 
     def plotOldSpec(self, spec, t, f):
+        self.axes.clear()
         self.axes.cla()
         self.axes.pcolormesh(t, f, abs(spec)**0.3) # n^0.3 to 'normalize' 
-        self.axes.set_title('Raw Audio Spectrogram')
         self.axes.set_xlabel('time (seconds)')
         self.axes.set_ylabel('Frequency (Hz)')
         self.draw()
