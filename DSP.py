@@ -10,6 +10,17 @@ import time
 
 import copy
 
+def sound( x, rate=8000, label=''):
+    from IPython.display import display, Audio, HTML
+    if label is '':
+        display( Audio( x, rate=rate))
+    else:
+        display( HTML( 
+        '<style> table, th, td {border: 0px; }</style> <table><tr><td>' + label + 
+        '</td><td>' + Audio( x, rate=rate)._repr_html_()[3:] + '</td></tr></table>'
+        ))
+
+
 def stft( input_sound, dft_size, hop_size, zero_pad, window=1.0):
     length = len(input_sound)
     

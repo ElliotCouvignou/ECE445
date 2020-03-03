@@ -29,7 +29,7 @@ import math
 from TranscriptPlotTab import TranscriptPlotFrame   
 from TranscriptEditorTab import TranscriptEditorFrame
 from Render import Transcript
-from DSP import stft, FormatAxis
+from DSP import stft, FormatAxis, sound
 
 
 class Ui_TranscriptEditor(QMainWindow):
@@ -253,12 +253,16 @@ class Ui_TranscriptEditor(QMainWindow):
     # Need to add audio file things eventually maybe
     def doRender(self):
         self.readTranscripts()
-        
+
         render = self.oldTranscripts[self.numchannels - 1].RenderTranscription(self.oldTranscripts[self.numchannels - 1], self.newTranscripts[self.numchannels - 1], True)
         for i in range(self.numchannels - 1):
             newrender = self.oldTranscripts[i].RenderTranscription(self.oldTranscripts[i], self.newTranscripts[i], True)
+            # pad to length
             if(len(newrender) > len(render)):
                 render = np.hstack((render, np.zeros(len(newrender) - len(render))))
+            elif(len(render) > len(newrender)):
+                newrender = np.hstack((newrender, np.zeros(len(render) - len(newrender))))
+
             render += newrender
         
         print('Rendered, check next tab') 
@@ -273,6 +277,8 @@ class Ui_TranscriptEditor(QMainWindow):
         maintrans = Transcript()
         maintrans.MainFromOthers(self.newTranscripts)
         self.setNewTranscriptText(maintrans)
+
+        sound(render, self.newTranscripts[0].sr, 'Rendered Sound')
 
     # reads the new timestamps and sets the values
     def readTranscripts(self):
@@ -378,7 +384,8 @@ class Ui_TranscriptEditor(QMainWindow):
     def setOldTranscriptText(self, transcripts, numchannels):
         self.oldTranscripts = []
         # fills in main, This needs to be redone to include all transcripts
-        transcript = transcripts[0]
+        transcript = Transcript()
+        transcript.MainFromOthers(transcripts)
         text = ""
         words = transcript.words
         times = transcript.timestamps
