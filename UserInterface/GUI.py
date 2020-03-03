@@ -29,7 +29,7 @@ import math
 from TranscriptPlotTab import TranscriptPlotFrame   
 from TranscriptEditorTab import TranscriptEditorFrame
 from Render import Transcript
-from DSP import stft, FormatAxis
+from DSP import stft, FormatAxis, sound
 
 
 class Ui_TranscriptEditor(QMainWindow):
@@ -277,6 +277,8 @@ class Ui_TranscriptEditor(QMainWindow):
         maintrans = Transcript()
         maintrans.MainFromOthers(self.newTranscripts)
         self.setNewTranscriptText(maintrans)
+
+        sound(render, self.newTranscripts[0].sr, 'Rendered Sound')
 
     # reads the new timestamps and sets the values
     def readTranscripts(self):
