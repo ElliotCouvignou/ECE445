@@ -35,7 +35,7 @@ from DSP import stft, FormatAxis
 class Ui_TranscriptEditor(QMainWindow):
     def setupUi(self, TranscriptEditor):
         TranscriptEditor.setObjectName("TranscriptEditor")
-        TranscriptEditor.resize(1142, 685)
+        TranscriptEditor.resize(1920, 1080)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -253,7 +253,6 @@ class Ui_TranscriptEditor(QMainWindow):
     # Need to add audio file things eventually maybe
     def doRender(self):
         self.readTranscripts()
-        print(self.newTranscripts[0].timestamps, ' \n eeeee \n\n')
         
         render = self.oldTranscripts[self.numchannels - 1].RenderTranscription(self.oldTranscripts[self.numchannels - 1], self.newTranscripts[self.numchannels - 1])
         for i in range(self.numchannels - 1):
@@ -318,7 +317,6 @@ class Ui_TranscriptEditor(QMainWindow):
 
                     self.newTranscripts[c].words[i] = word
                     self.newTranscripts[c].timestamps[i] = (start, end)
-                    print(word, (start,end), c)
 
                     i+=1
                     idx += offset + 8
@@ -345,7 +343,16 @@ class Ui_TranscriptEditor(QMainWindow):
                 l.removeWidget(self.oldSpecWidget)
 
             m = MplCanvas(self.oldspec_plot, width=5, height=4)
-            spec, t, f = self.oldTranscripts[0].getSpec()
+
+            render = self.oldTranscripts[self.numchannels-1].audio
+            for i in range(self.numchannels - 1):
+                newrender = self.oldTranscripts[i].audio
+                if(len(newrender) > len(render)):
+                    render = np.hstack((render, np.zeros(len(newrender) - len(render))))
+                render += newrender
+
+            spec = stft(input_sound=render, dft_size=256, hop_size=64, zero_pad=256, window=signal.hann(256))
+            t,f = FormatAxis(spec, self.oldTranscripts[0].sr, len(render)/self.oldTranscripts[0].sr)
 
             m.plotSpec(spec, t, f)
             self.oldSpecWidget = m
@@ -477,7 +484,7 @@ class Ui_TranscriptEditor(QMainWindow):
         self.setCentralWidget(self.TabWidget)
     
     # transcripts = array of transcripts, len(transcripts) = number of channels
-    def launchInit(self, spec, t, f, transcripts, numchannels):
+    def launchInit(self,transcripts, numchannels):
         self.numchannels = numchannels
         self.setOldTranscriptText(transcripts, numchannels)
         for i in range(numchannels+1):
