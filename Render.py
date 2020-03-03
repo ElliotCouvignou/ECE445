@@ -6,7 +6,7 @@ import math
 import numpy as np
 import copy as copy
 
-
+import DSP
 
 
 ### CLASSES ####
@@ -39,15 +39,38 @@ class Transcript():
             i += 1
 
     def swap(self, i, j):
-        self.words[i], self.words[j] = self.words[j], self.words[i]
-        self.timestamps[i], self.timestamps[j] = self.timestamps[j], self.timestamps[i]
-        
+        tmp = self.words[j]
+        self.words[j] = self.words[i]
+        self.words[i] = tmp
 
+        tmp = self.timestamps[j]
+        self.timestamps[j] = self.timestamps[i]
+        self.timestamps[i] = tmp
+
+    def getSpec(self):
+        spec = DSP.stft(input_sound=self.audio, dft_size=256, hop_size=64, zero_pad=256, window=signal.hann(256))
+        t,f = DSP.FormatAxis(spec, self.sr, len(self.audio)/self.sr)
+        return spec, t, f
+
+    # creates main channel type transcript from others. Basically combines them
+    def MainFromOthers(self, transcripts):
+        
+        for i in range(len(transcripts)):
+            transcript = transcripts[i]
+            if( i == 0):
+                self.words = transcript.words
+                self.timestamps = transcript.timestamps
+            else:
+                self.words = np.hstack((self.words, transcript.words))
+                self.timestamps = np.hstack((self.timestamps, transcript.timestamps))
+
+        self.quicksort()        
+        
     #
     # Transcript.words[i] = i-th word
     # Transcript.timestamps[i] = start/end times for i-th word
     #
-    def RenderTranscription(self, oldtrans, newtrans, audio, sr, windowing=False):
+    def RenderTranscription(self, oldtrans, newtrans, windowing=False):
         render = np.array([0])
         renderlen = 0
 
@@ -58,10 +81,10 @@ class Transcript():
         for i in range(len(oldtrans.words)):
 
             # get start/end times in samples for slicing
-            oldstart_n = time2sample(oldtime[i][0],sr)
-            oldend_n = time2sample(oldtime[i][1],sr)
-            newstart_n = time2sample(newtime[i][0],sr)
-            newend_n = time2sample(newtime[i][1], sr)    
+            oldstart_n = time2sample(oldtime[i][0],oldtrans.sr)
+            oldend_n = time2sample(oldtime[i][1],  oldtrans.sr)
+            newstart_n = time2sample(newtime[i][0],oldtrans.sr)
+            newend_n = time2sample(newtime[i][1],  oldtrans.sr)    
 
             shift = newstart_n - oldstart_n
 
@@ -78,15 +101,15 @@ class Transcript():
             # place audio slice into render
             if(windowing and shift != 0):
                 # ATM trying out Hamming for minimal spectral coloring
-                windowed = np.asarray(audio[oldstart_n:oldend_n], dtype=np.float)
+                windowed = np.asarray(oldtrans.audio[oldstart_n:oldend_n], dtype=np.float)
 
-                delay_ms = round(.075 * sr) # 75 ms for now. based on feel
+                delay_ms = round(.075 * oldtrans.sr) # 75 ms for now. based on feel
                 windowed[:delay_ms] *= np.linspace(0.0,1.0 ,min(delay_ms, len(windowed)))  # front
                 windowed[-delay_ms:] *= np.linspace(0.0,1.0 ,min(delay_ms, len(windowed)))  # end
 
                 render[newstart_n:newend_n] += windowed
             else:
-                render[newstart_n:newend_n] += audio[oldstart_n:oldend_n]
+                render[newstart_n:newend_n] += oldtrans.audio[oldstart_n:oldend_n]
             idx += 1
 
         newtrans.audio = render
@@ -137,11 +160,6 @@ class Transcript():
     def quicksort(self):
         # Create a helper function that will be called recursively
         self._quick_sort(0, len(self.timestamps) - 1)
-        print(self.words)
-        print(self.timestamps)
-
-
-
 
 
 
