@@ -253,12 +253,16 @@ class Ui_TranscriptEditor(QMainWindow):
     # Need to add audio file things eventually maybe
     def doRender(self):
         self.readTranscripts()
-        
+
         render = self.oldTranscripts[self.numchannels - 1].RenderTranscription(self.oldTranscripts[self.numchannels - 1], self.newTranscripts[self.numchannels - 1], True)
         for i in range(self.numchannels - 1):
             newrender = self.oldTranscripts[i].RenderTranscription(self.oldTranscripts[i], self.newTranscripts[i], True)
+            # pad to length
             if(len(newrender) > len(render)):
                 render = np.hstack((render, np.zeros(len(newrender) - len(render))))
+            elif(len(render) > len(newrender)):
+                newrender = np.hstack((newrender, np.zeros(len(render) - len(newrender))))
+
             render += newrender
         
         print('Rendered, check next tab') 
