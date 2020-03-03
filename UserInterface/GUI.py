@@ -254,9 +254,9 @@ class Ui_TranscriptEditor(QMainWindow):
     def doRender(self):
         self.readTranscripts()
         
-        render = self.oldTranscripts[self.numchannels - 1].RenderTranscription(self.oldTranscripts[self.numchannels - 1], self.newTranscripts[self.numchannels - 1])
+        render = self.oldTranscripts[self.numchannels - 1].RenderTranscription(self.oldTranscripts[self.numchannels - 1], self.newTranscripts[self.numchannels - 1], True)
         for i in range(self.numchannels - 1):
-            newrender = self.oldTranscripts[i].RenderTranscription(self.oldTranscripts[i], self.newTranscripts[i])
+            newrender = self.oldTranscripts[i].RenderTranscription(self.oldTranscripts[i], self.newTranscripts[i], True)
             if(len(newrender) > len(render)):
                 render = np.hstack((render, np.zeros(len(newrender) - len(render))))
             render += newrender

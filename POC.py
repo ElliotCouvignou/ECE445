@@ -79,48 +79,42 @@ def sample_long_running_recognize(storage_uri):
     return alternative.words
 
 
-
-# shifts by unit of time in seconds
-def ShiftTranscriptWord(transcript, index, timeshift):
-    
-    secs = int(timeshift)
-    nanos = int((timeshift - secs) * 10**9)
-    
-    word = transcript[index]
-    
-    if(word.start_time.nanos + nanos >= 10**9):
-        secs += 1
-    if(word.end_time.nanos + nanos >= 10**9):
-        secs += 1
-    
-    word.start_time.seconds += secs
-    word.end_time.seconds += secs
-
-    word.start_time.nanos = (word.start_time.nanos + nanos ) % 10**9
-    word.end_time.nanos = (word.end_time.nanos + nanos ) % 10**9
-
-
-
-
-    
+   
     
 #### START ####
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="JSON/My First Project-1534988de9b5.json"
 
-storage_uri = 'gs://ringr_audio/venv/RawAudio/case1.wav'
+a = 'asd' #input('hardcode input (default)? or manual(m)? ')
+
+if(a == 'm'):
+    a = input('enter Google storage location e.g: gs://ringr_audio/venv/RawAudio/case1.wav : ')
+    storage_uri = a
+    a = input('enter local file location e.g: RawAudio/case1.wav : ')
+    sr, case2 = wavfile.read(a)
     
+else:
+    # ONLY CHANGE THESE VARLAIBELS
+    storage_uri1 = 'gs://ringr_audio/venv/RawAudio/case1.wav' 
+    storage_uri2 = 'gs://ringr_audio/venv/RawAudio/case2.wav' 
+    # google cloud API
+    #storage_uri = 'gs://ringr_audio/venv/wetransfer-9e/case1.wav' 
+    sr1, case1 = wavfile.read('RawAudio/case1.wav')                                           # local read
+    sr2, case2 = wavfile.read('RawAudio/case2.wav')   
     
-sr, case2 = wavfile.read('RawAudio/case1.wav')  
-transcript = sample_long_running_recognize(storage_uri)
+
+# no user inputon this    
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="JSON/My First Project-1534988de9b5.json"   # JSON API KEY
+# do transcription    
+gtranscript1 = sample_long_running_recognize(storage_uri1)
+gtranscript2 =  sample_long_running_recognize(storage_uri2)
 
 # translate API transcript to one easier to use
-gtranscript = Transcript()
-gtranscript.setupGoogle(transcript)
-gtranscript.initAudio(case2, sr)
+transcript1 = Transcript()
+transcript1.setupGoogle(gtranscript1)
+transcript1.initAudio(case1, sr1)
 
-
-# audio widget
-sound(case2, sr, 'old sound')
+transcript2 = Transcript()
+transcript2.setupGoogle(gtranscript2)
+transcript2.initAudio(case2, sr2)
 
 # GUI TESTING
 print('Launching UI')
@@ -131,16 +125,8 @@ aw = Ui_TranscriptEditor()
 aw.setupUi(aw)
 aw.setupUiManual()
 
- 
-# plot spectrogram
-spec = stft(input_sound=case2, dft_size=256, hop_size=64, zero_pad=256, window=signal.hann(256))
-t,f = FormatAxis(spec, sr, len(case2)/sr)
-aw.plotOldSpec(spec, t, f)
-
-# print transcription
-aw.initTranscriptEditor(gtranscript)
-aw.setTranscriptText(gtranscript)
-
+tarray = [transcript1, transcript2]
+aw.launchInit(tarray, 2)
 
 aw.show()
 sys.exit(qApp.exec_())
