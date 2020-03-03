@@ -382,7 +382,8 @@ class Ui_TranscriptEditor(QMainWindow):
     def setOldTranscriptText(self, transcripts, numchannels):
         self.oldTranscripts = []
         # fills in main, This needs to be redone to include all transcripts
-        transcript = transcripts[0]
+        transcript = Transcript()
+        transcript.MainFromOthers(transcripts)
         text = ""
         words = transcript.words
         times = transcript.timestamps
