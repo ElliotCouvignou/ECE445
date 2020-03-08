@@ -1,22 +1,35 @@
-
-from scipy import signal
-
-# stuff
+import json
+import os
+import wave
 import math
 import numpy as np
 import copy as copy
-
 import DSP
+from pydub.utils import mediainfo
+from os.path import join, dirname
+from ibm_watson import SpeechToTextV1
+from ibm_watson.websocket import RecognizeCallback, AudioSource
+from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+from scipy import signal
+from audio2numpy import open_audio
 
+class MyRecognizeCallback(RecognizeCallback):
+    def __init__(self):
+        RecognizeCallback.__init__(self)
 
-### CLASSES ####
+    def on_data(self, data):
+        print(json.dumps(data, indent=2))
 
+    def on_error(self, error):
+        print('Error received: {}'.format(error))
 
-# Transcript datatype-ish class
+    def on_inactivity_timeout(self, error):
+        print('Inactivity timeout: {}'.format(error))
+        
 class Transcript():
     def __init__(self):
         self.words = np.array(['wordwordwordwordwordword'])
-        self.timestamps = np.array([0.0], dtype=object)
+        self.timestamps = np.array([0.00], dtype=object)
 
 
     def initAudio(self, audio, sr):
@@ -27,15 +40,15 @@ class Transcript():
         self.words = copy.deepcopy(transcript.words)
         self.timestamps = copy.deepcopy(transcript.timestamps)
         
-    def setupGoogle(self, transcript):
+    def setupIBM(self, transcript, confidence):
         self.words = np.repeat(self.words, len(transcript))
         self.timestamps = np.repeat(self.timestamps, len(transcript))
+        self.confidence = confidence
         
         i = 0
         for word in transcript:
-            self.words[i] = word.word
-            self.timestamps[i] = (word.start_time.seconds + word.start_time.nanos / 10**9 , \
-                                  word.end_time.seconds + word.end_time.nanos / 10 ** 9)
+            self.words[i] = word[0]
+            self.timestamps[i] = (word[1],word[2])
             i += 1
 
     def swap(self, i, j):
@@ -160,9 +173,43 @@ class Transcript():
     def quicksort(self):
         # Create a helper function that will be called recursively
         self._quick_sort(0, len(self.timestamps) - 1)
+   
+    def ibm_recog(self,audioname,audiofp,ctype):
+        authenticator = IAMAuthenticator('6noBhxJHkbRVsgbxsl47v6dFZnJdoRRrDRYte7GgKKxu')
+        speech_to_text = SpeechToTextV1(authenticator=authenticator)
+        speech_to_text.set_service_url('https://api.us-south.speech-to-text.watson.cloud.ibm.com/instances/51085e72-7959-4c18-94cd-d4d874baf61d')
+        myRecognizeCallback = MyRecognizeCallback()
+    
+        with open(join(dirname(audioname), audiofp), 'rb') as audio_file:
+        
+            audio_source = AudioSource(audio_file)
+        
+            x = speech_to_text.recognize(
+                audio=audio_file,
+                content_type=ctype,
+                recognize_callback=myRecognizeCallback,
+                model='en-US_BroadbandModel',
+                timestamps=True,
+            #smart_formatting=True
+            )
+        result = x.result
+        alternatives = result.get('results')[0].get('alternatives')[0]
+        transcript = alternatives.get('transcript')
+        timestamps = alternatives.get('timestamps')
+        confidence = alternatives.get('confidence')
+        a,sr=open_audio(audiofp)
+        self.initAudio(a,sr)
+        self.setupIBM(timestamps,confidence)
 
 
 
 def time2sample(time, sr):
     return round(time*sr)
-        
+
+#--------------------------------------------------------------------------------
+
+
+
+
+
+
