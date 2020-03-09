@@ -12,6 +12,8 @@ from ibm_watson.websocket import RecognizeCallback, AudioSource
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from scipy import signal
 from audio2numpy import open_audio
+from scipy.io import wavfile
+
 
 class MyRecognizeCallback(RecognizeCallback):
     def __init__(self):
@@ -61,8 +63,9 @@ class Transcript():
         self.timestamps[i] = tmp
 
     def getSpec(self):
-        spec = DSP.stft(input_sound=self.audio, dft_size=256, hop_size=64, zero_pad=256, window=signal.hann(256))
-        t,f = DSP.FormatAxis(spec, self.sr, len(self.audio)/self.sr)
+        f, t, spec = signal.spectrogram(self.audio, self.sr)
+        #spec = DSP.stft(input_sound=self.audio, dft_size=256, hop_size=64, zero_pad=256, window=signal.hann(256))
+        #t,f = DSP.FormatAxis(spec, self.sr, len(self.audio)/self.sr)
         return spec, t, f
 
     # creates main channel type transcript from others. Basically combines them
@@ -197,7 +200,10 @@ class Transcript():
         transcript = alternatives.get('transcript')
         timestamps = alternatives.get('timestamps')
         confidence = alternatives.get('confidence')
-        a,sr=open_audio(audiofp)
+        #a,sr=open_audio(audiofp)
+        sr, a = wavfile.read(audiofp)
+       
+        #a = DSP.normalize(a)
         self.initAudio(a,sr)
         self.setupIBM(timestamps,confidence)
 

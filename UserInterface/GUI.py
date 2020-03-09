@@ -267,8 +267,10 @@ class Ui_TranscriptEditor(QMainWindow):
         
         print('Rendered, check next tab') 
 
-        spec = stft(input_sound=render, dft_size=256, hop_size=64, zero_pad=256, window=signal.hann(256))
-        t,f = FormatAxis(spec, self.oldTranscripts[0].sr, len(render)/self.oldTranscripts[0].sr)
+        f, t, spec = signal.spectrogram(render, self.oldTranscripts[0].sr)
+
+        #spec = stft(input_sound=render, dft_size=256, hop_size=64, zero_pad=256, window=signal.hann(256))
+        #t,f = FormatAxis(spec, self.oldTranscripts[0].sr, len(render)/self.oldTranscripts[0].sr)
         self.plotNewSpec(spec, t, f)
 
         for i in range(self.numchannels):
@@ -357,8 +359,7 @@ class Ui_TranscriptEditor(QMainWindow):
                     render = np.hstack((render, np.zeros(len(newrender) - len(render))))
                 render += newrender
 
-            spec = stft(input_sound=render, dft_size=256, hop_size=64, zero_pad=256, window=signal.hann(256))
-            t,f = FormatAxis(spec, self.oldTranscripts[0].sr, len(render)/self.oldTranscripts[0].sr)
+            spec, t, f = self.oldTranscripts[0].getSpec()
 
             m.plotSpec(spec, t, f)
             self.oldSpecWidget = m
