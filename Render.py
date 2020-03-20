@@ -35,8 +35,28 @@ class Transcript():
 
 
     def initAudio(self, audio, sr):
-        self.audio = audio
         self.sr = sr
+        
+        try:        
+            self.audio = audio
+            if(len(audio.shape) == 1):
+                print('Transcript Recognizes Mono audio')
+                self.isMono = True
+                self.isStereo = False
+                self.audiolength = audio.shape[0]
+                self.audio[0] += self.audio[1]  #test read-only
+                
+            elif(len(audio.shape) == 2):
+                print('Transcript Recognizes Stereo audio')
+                self.isMono = False
+                self.isStereo = True
+                self.audiolength = audio.shape[1]
+                self.audio[0][0] += self.audio[0][1] #test read-only
+                
+                            
+        except:
+            self.audio = copy.deepcopy(audio) # deepcopy our own array if read-only        
+            #print(self.audio)
         
     def copyother(self, transcript):
         self.words = copy.deepcopy(transcript.words)
@@ -52,6 +72,9 @@ class Transcript():
             self.words[i] = word[0]
             self.timestamps[i] = (word[1],word[2])
             i += 1
+        
+        self.wordCount = len(self.timestamps)
+        self.shifts = np.zeros(self.wordCount)
 
     def swap(self, i, j):
         tmp = self.words[j]
@@ -63,7 +86,12 @@ class Transcript():
         self.timestamps[i] = tmp
 
     def getSpec(self):
-        f, t, spec = signal.spectrogram(self.audio, self.sr)
+        if(self.isMono):
+            f, t, spec = signal.spectrogram(self.audio, self.sr)
+        else:
+            f, t, specl = signal.spectrogram(self.audio[:,0], self.sr)
+            f, t, specr = signal.spectrogram(self.audio[:,1], self.sr)
+            spec = (specl + specr) / 2
         #spec = DSP.stft(input_sound=self.audio, dft_size=256, hop_size=64, zero_pad=256, window=signal.hann(256))
         #t,f = DSP.FormatAxis(spec, self.sr, len(self.audio)/self.sr)
         return spec, t, f
@@ -80,65 +108,103 @@ class Transcript():
                 self.words = np.hstack((self.words, transcript.words))
                 self.timestamps = np.hstack((self.timestamps, transcript.timestamps))
 
-        self.quicksort()        
+        self.audiolength = len(self.timestamps)
+        self.quicksort( ( 0, self.audiolength-1) )        
         
     #
     # Transcript.words[i] = i-th word
     # Transcript.timestamps[i] = start/end times for i-th word
     #
-    def RenderTranscription(self, oldtrans, newtrans, windowing=False):
-        render = np.array([0])
-        renderlen = 0
+    def RenderTranscription(self, trans, windowing=False):
+        render = np.asarray(trans.audio, dtype=np.float)
+        renderlen = trans.audiolength
+        time = trans.timestamps
+        
+        # ATM doinglinear crossfade (75ms) via np.linspace
+        delay_ms = round(.075 * trans.sr) # 75 ms for now. based on feel, FOR WINDOWING
 
-        newtime = newtrans.timestamps
-        oldtime = oldtrans.timestamps
-        # loop through each word, if this is latest word then extend render
-        idx = 0
-        for i in range(len(oldtrans.words)):
+        # loop through each word, if shifts[i] !=0 then edit audio array to shift word slice
+        for i in range(len(trans.words)):
+            
+            if(trans.shifts[i] != 0.0 ):
+                # get start/end times in samples for slicing
+                newstart_n = time2sample(time[i][0],trans.sr)
+                newend_n = time2sample(time[i][1],  trans.sr)  
+                oldstart_n = time2sample(time[i][0] - trans.shifts[i],trans.sr) # undo shift applied to timestamps
+                oldend_n = time2sample(time[i][1] - trans.shifts[i],trans.sr)  # undo shift applied to timestamps
 
-            # get start/end times in samples for slicing
-            oldstart_n = time2sample(oldtime[i][0],oldtrans.sr)
-            oldend_n = time2sample(oldtime[i][1],  oldtrans.sr)
-            newstart_n = time2sample(newtime[i][0],oldtrans.sr)
-            newend_n = time2sample(newtime[i][1],  oldtrans.sr)    
+                shift = trans.shifts[i]
+                sliced = trans.audio[oldstart_n:oldend_n]
 
-            shift = newstart_n - oldstart_n
+                # extend/pad render length if necessary
+                if(newend_n > renderlen):  
+                    l = newend_n - renderlen
+                    pad = np.zeros(l)
+                    if(renderlen == 0):
+                        render = pad
+                    else:
+                        # if windowing, window end piece
+                        if(windowing and renderlen == trans.audiolength):
+                            render[-delay_ms:] *= np.linspace(1.0, 0.0, min(delay_ms, renderlen))
+                        render = np.hstack((render, pad))
 
-            if(newend_n > renderlen):  
-                # extend render length 
-                l = newend_n - renderlen
-                pad = np.zeros(l)
-                if(renderlen == 0):
-                    render = pad
-                else:
-                    render = np.hstack((render, pad))
-                renderlen = len(render)
+                    renderlen = newend_n
+                # check if new timestamp is before 0seconds
+                elif(newstart_n < 0):
+                    offset = abs(newstart_n)
+                    pad = np.zeros(offset)
+                    render = np.hstack((pad, render))
+                    # shift new/old start/end times since newstart_n should index 0 now
+                    newend_n += offset
+                    newstart_n += offset
+                    oldend_n += offset
+                    oldstart_n += offset
 
-            # place audio slice into render
-            if(windowing and shift != 0):
-                # ATM trying out Hamming for minimal spectral coloring
-                windowed = np.asarray(oldtrans.audio[oldstart_n:oldend_n], dtype=np.float)
+                # place audio slice into render
+                # if we are windowing then we need to crossfade before slice, after slice, and both sides of slice
+                if(windowing):
+                    # windowing slcied audio first
+                    # this is complicated, if trans.shifts[i+1] == shifts[i] then these words are in the same segment
+                    # if this is true we dont window their connections since they are still one piece
+                    if(i > 0): #boundary control
+                        #  check if left word is connected to right
+                        leftwordend_n = time2sample(trans.timestamps[i-1][1], trans.sr)
+                        
+                        if(leftwordend_n != newstart_n):
+                            # left index word isn't connected
+                            # window left side of this audio and right side of audio before this word
+                            print('left', i, leftwordend_n, newstart_n)
+                            sliced[:delay_ms] = (np.linspace(0.0,1.0 ,min(delay_ms, len(sliced)))*sliced[:delay_ms]).astype(int)
+                            render[oldstart_n-delay_ms:oldstart_n] *= np.linspace(1.0, 0.0, delay_ms)
+                    else:
+                        #unique case, if i = 0 and shift != 0, window left no matter what
+                        print(i)
+                        sliced[:delay_ms] = (np.linspace(0.0,1.0 ,min(delay_ms, len(sliced)))*sliced[:delay_ms]).astype(int)
 
-                delay_ms = round(.075 * oldtrans.sr) # 75 ms for now. based on feel
-                windowed[:delay_ms] *= np.linspace(0.0,1.0 ,min(delay_ms, len(windowed)))  # front
-                windowed[-delay_ms:] *= np.linspace(0.0,1.0 ,min(delay_ms, len(windowed)))  # end
-
-                render[newstart_n:newend_n] += windowed
-            else:
-                render[newstart_n:newend_n] += oldtrans.audio[oldstart_n:oldend_n]
-            idx += 1
-
-        newtrans.audio = render
-        newtrans.sr = oldtrans.sr
+                    if(i < trans.wordCount-1):
+                        rightwordstart_n = time2sample(trans.timestamps[i+1][0], trans.sr)
+                        
+                        if(rightwordstart_n != newend_n):
+                            # right word isnt in same segment, window
+                            print('right', i, rightwordstart_n, newend_n)
+                            sliced[-delay_ms:] = (np.linspace(1.0,0.0 ,min(delay_ms, len(sliced))) * sliced[-delay_ms:]).astype(int)
+                            render[oldend_n:oldend_n+delay_ms] *= np.linspace(0.0, 1.0, delay_ms)
+                
+                # move sliced audio and zero pad empty space
+                render[newstart_n:newend_n] = sliced
+                render[oldstart_n:oldend_n] = 0
+                # !!!!!!!!!BACKGROUND FILL GOES HERE!!!!!!!!!!
+                    
         return render
 
 
     # calls Render Transcription for each channel
     # parameters are arrays where each index are parameters to individual render transcription calls
     def RenderMultiChannels(self, oldtrans, newtrans, audios, srs, window=False):
+        render = np.array([0])
         for i in len(oldtrans):
-            self.RenderTranscription(oldtrans[i], newtrans[i], audios[i], srs[i], window)
-
+            render += self.RenderTranscription(oldtrans[i], newtrans[i], audios[i], srs[i], window)
+        return render
 
     
     # next two are for sorting transcription words based on timestamps
@@ -173,9 +239,9 @@ class Transcript():
             self._quick_sort(low, split_index)
             self._quick_sort(split_index + 1, high)
 
-    def quicksort(self):
+    def quicksort(self, range):
         # Create a helper function that will be called recursively
-        self._quick_sort(0, len(self.timestamps) - 1)
+        self._quick_sort(range[0], range[1])
    
     def ibm_recog(self,audioname,audiofp,ctype):
         authenticator = IAMAuthenticator('6noBhxJHkbRVsgbxsl47v6dFZnJdoRRrDRYte7GgKKxu')
@@ -202,15 +268,15 @@ class Transcript():
         confidence = alternatives.get('confidence')
         #a,sr=open_audio(audiofp)
         sr, a = wavfile.read(audiofp)
-       
+
         #a = DSP.normalize(a)
-        self.initAudio(a,sr)
+        self.initAudio(a, sr)
         self.setupIBM(timestamps,confidence)
 
 
 
 def time2sample(time, sr):
-    return round(time*sr)
+    return int(round(time*sr))
 
 #--------------------------------------------------------------------------------
 

@@ -1,0 +1,73 @@
+// Get the vertex position in eye coordinates
+    vec4 vertexPositionEye4 = uMVMatrix * vec4(aVertexPosition, 1.0);
+    vec3 vertexPositionEye3 = vertexPositionEye4.xyz / vertexPositionEye4.w;
+  
+    // Calculate the vector (l) to the light source
+    vec3 vectorToLightSource = normalize(uLightPosition - vertexPositionEye3);
+	
+    // Transform the normal (n) to eye coordinates
+    vec3 normalEye = normalize(uNMatrix * aVertexNormal);
+    
+    // Calculate n dot l for diffuse lighting
+    float diffuseLightWeightning = max(dot(normalEye, 
+                                    vectorToLightSource), 0.0);
+                                       
+    // Calculate the reflection vector (r) that is needed for specular light
+    vec3 reflectionVector = normalize(reflect(-vectorToLightSource, 
+                                             normalEye));
+    
+    // The camera in eye coordinates is located in the origin and is pointing
+    // along the negative z-axis. Calculate viewVector (v) 
+    // in eye coordinates as:
+    // (0.0, 0.0, 0.0) - vertexPositionEye3
+    vec3 viewVectorEye = -normalize(vertexPositionEye3);
+	
+	// calculate the vector (H) as halfway vector from light to V
+	vec3 thing = (viewVectorEye + vectorToLightSource);
+	float length = length(thing);
+    vec3 VectorH = (viewVectorEye + vectorToLightSource) / length;
+	
+    float rdotv = max(dot(reflectionVector, VectorH), 0.0);
+    
+    float specularLightWeightning = pow(rdotv, uShininess);
+	
+	// SECTION FOR ELEVATION MAPPING
+	
+	// diffuse colors to choose from
+	vec3 diffuselvl0 = vec3(0.0, 0.0, 1.0);
+	vec3 diffuselvl1 = vec3(96.0/255.0, 188.0/255.0, 70.0/255.0);
+	vec3 diffuselvl2 = vec3(1.0, 250.0/255.0, 250.0/255.0);
+
+	// lerp ranges
+	float l01min = -0.1;
+	float l01max = -0.15;
+	
+	float l12min = 0.15;
+	float l12max = 0.2;
+	
+	vec3 newdiffuse;
+	
+	/* set color based on height, lerp if in given ranges */
+	if(aVertexPosition[2] < l01min){
+		newdiffuse = diffuselvl0;
+	}
+	else if(aVertexPosition[2] > l01min && aVertexPosition[2] < l01max){
+		float c = (aVertexPosition[2] - l01min) / (l01max - l01min);
+		newdiffuse = diffuselvl1*c + diffuselvl0*(1.0-c);
+	}
+	else if (aVertexPosition[2] > l01max && aVertexPosition[2] < l12min){
+		newdiffuse = diffuselvl1;
+	}
+	else if(aVertexPosition[2] > l12min && aVertexPosition[2] < l12max){
+		float c = (aVertexPosition[2] - l12min) / (l12max - l12min);
+		newdiffuse = diffuselvl2*c + diffuselvl1*(1.0-c);
+	}
+	else{
+		newdiffuse = diffuselvl2;
+	}
+	
+	
+    // Sum up all three reflection components and send to the fragment shader
+    vColor = vec4(((uAmbientLightColor*uKAmbient)
+                + (uDiffuseLightColor*newdiffuse) * diffuseLightWeightning
+                + ((uSpecularLightColor*uKSpecular) * specularLightWeightning)),1.0);

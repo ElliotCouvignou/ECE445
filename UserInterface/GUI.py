@@ -25,6 +25,7 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from scipy import signal
 import math
+import copy
 
 from TranscriptPlotTab import TranscriptPlotFrame   
 from TranscriptEditorTab import TranscriptEditorFrame
@@ -252,11 +253,11 @@ class Ui_TranscriptEditor(QMainWindow):
     # Called after Render button
     # Need to add audio file things eventually maybe
     def doRender(self):
-        self.readTranscripts()
+        #self.readTranscripts()
 
-        render = self.oldTranscripts[self.numchannels - 1].RenderTranscription(self.oldTranscripts[self.numchannels - 1], self.newTranscripts[self.numchannels - 1], True)
+        render = self.oldTranscripts[self.numchannels - 1].RenderTranscription(self.oldTranscripts[self.numchannels - 1], True)
         for i in range(self.numchannels - 1):
-            newrender = self.oldTranscripts[i].RenderTranscription(self.oldTranscripts[i], self.newTranscripts[i], True)
+            newrender = self.oldTranscripts[i].RenderTranscription(self.oldTranscripts[i], True)
             # pad to length
             if(len(newrender) > len(render)):
                 render = np.hstack((render, np.zeros(len(newrender) - len(render))))
@@ -274,61 +275,49 @@ class Ui_TranscriptEditor(QMainWindow):
         self.plotNewSpec(spec, t, f)
 
         for i in range(self.numchannels):
-            self.newTranscripts[i].quicksort()
+            self.oldTranscripts[i].quicksort( (0, len(self.oldTranscripts[i].timestamps) - 1) )
         
         maintrans = Transcript()
-        maintrans.MainFromOthers(self.newTranscripts)
+        maintrans.MainFromOthers(self.oldTranscripts)
         self.setNewTranscriptText(maintrans)
 
-        sound(render, self.newTranscripts[0].sr, 'Rendered Sound')
+        sound(render, self.oldTranscripts[0].sr, 'Rendered Sound')
 
-    # reads the new timestamps and sets the values
-    def readTranscripts(self):
-        self.newTranscripts = [0] * self.numchannels
 
-        for c in range(self.numchannels):
-            self.newTranscripts[c] = Transcript()
-            self.newTranscripts[c].copyother(self.oldTranscripts[c])
-            frame = self.editorChannelArray[c]
+    # function for when Apply Shift button is pressed in the transcript editor
+    def doApplyShift(self):        
+        #get active/visible editor tab
+        activeIdx = self.EditorChannelsTab.currentIndex()
+        activeWidget =  self.editorChannelArray[activeIdx]
+        activeTranscript = self.oldTranscripts[activeIdx]
 
-            text = frame.newwords_2.toPlainText()
+        # do nothing check
+        if(activeWidget.WordShiftAmount.value() == 0 and activeWidget.WordSelectEnd.value() == 0):
+            return 
 
-            i = 0 
-            # parse text, VERY BAD AND WIP
-            for idx in range(len(text)-1):
-                if(text[idx] == '[' and text[idx+1] == '('):
-                    word = self.oldTranscripts[c].words[i]
+        # get select idx, -1 to convert to 0 index
+        selectstart = max(activeWidget.WordSelectStart.value()-1, 0)
+        
+        selectend = min(activeWidget.WordSelectEnd.value()-1, activeTranscript.wordCount -1) 
+        if(selectend == -1):
+            selectend = activeTranscript.wordCount -1
+        shiftamt = activeWidget.WordShiftAmount.value()
 
-                    # read new word
-                    p = 0
-                    newword = ""
+        # apply shift to timestamps and keep track of shifts in shift array
+        i = selectstart
+        end = min(activeTranscript.audiolength, selectend)
+        while i <= end:
+            tup = activeTranscript.timestamps[i]
+            activeTranscript.timestamps[i] = (tup[0] + shiftamt, tup[1] + shiftamt)
+            activeTranscript.shifts[i] += shiftamt
+            i += 1
+        
+        activeWidget.WordSelectEnd.setValue(0)
+        activeWidget.WordSelectStart.setValue(0)
+        activeWidget.WordShiftAmount.setValue(0.00)
 
-                    while text[idx + 6 + p] != ',' :
-                        newword += text[idx + 6 + p]
-                        p += 1 
-                    offset = 8+p
-                    self.newTranscripts[c].words[i] = newword
-
-                    #  Parse numbers, very rough since format isnt decided
-                    j = 0
-                    while text[idx+offset + j] != ',':                 
-                        j += 1
-
-                    start = float(text[idx+offset : idx+offset+j])
-                    offset += j + 2
-
-                    j = 0
-                    while text[idx+offset + j] != ']':                 
-                        j += 1
-
-                    end = float(text[idx+offset: idx+offset+j])
-
-                    self.newTranscripts[c].words[i] = word
-                    self.newTranscripts[c].timestamps[i] = (start, end)
-
-                    i+=1
-                    idx += offset + 8
-
+        print('shift applied')
+        
 
     def plotNewSpec(self, spec, t, f):
 
@@ -352,14 +341,14 @@ class Ui_TranscriptEditor(QMainWindow):
 
             m = MplCanvas(self.oldspec_plot, width=5, height=4)
 
-            render = self.oldTranscripts[self.numchannels-1].audio
+            render = copy.deepcopy(self.oldTranscripts[self.numchannels-1].audio)
             for i in range(self.numchannels - 1):
                 newrender = self.oldTranscripts[i].audio
                 if(len(newrender) > len(render)):
                     render = np.hstack((render, np.zeros(len(newrender) - len(render))))
-                render += newrender
+                render = np.add(newrender, render)
 
-            spec, t, f = self.oldTranscripts[0].getSpec()
+            f, t, spec = signal.spectrogram(render, self.oldTranscripts[0].sr)
 
             m.plotSpec(spec, t, f)
             self.oldSpecWidget = m
@@ -389,14 +378,13 @@ class Ui_TranscriptEditor(QMainWindow):
         transcript.MainFromOthers(transcripts)
         text = ""
         words = transcript.words
-        times = transcript.timestamps
         for i in range(len(words)):
             text += words[i] + ' ' 
         self.oldwords.setText(text)
         self.oldTranscripts.append(transcripts[0])
 
         # create new tabs and fill in
-        if(numchannels > 1):
+        if(numchannels >= 1):
             # create new tabs for each channel and add its transcription
             # aarray holds frames
             self.oldChannelArray = []
@@ -422,15 +410,12 @@ class Ui_TranscriptEditor(QMainWindow):
 
                 text = ""
                 words = transcript.words
-                times = transcript.timestamps
                 for k in range(len(words)):
                     text += words[k] + ' ' 
 
                 newframe.oldwords.setText(text)
                 self.oldTranscripts.append(transcripts[i])
                 
-
-        
         self.OriginalChannelTabs.setCurrentIndex(0)
 
 
@@ -441,8 +426,8 @@ class Ui_TranscriptEditor(QMainWindow):
         for j in range(self.EditorChannelsTab.count()):
             self.EditorChannelsTab.removeTab(j)
 
-        for i in range(numchannels):
-            tabname = "Channel " + str(i+1)
+        for t in range(numchannels):
+            tabname = "Channel " + str(t+1)
             newtab = QtWidgets.QWidget()
             newframe = TranscriptEditorFrame(self.EditorChannelsTab)
             newframe.setupUi(newframe)
@@ -453,16 +438,21 @@ class Ui_TranscriptEditor(QMainWindow):
             self.EditorChannelsTab.addTab(newtab, tabname)
             self.editorChannelArray.append(newframe)
 
-            transcript = transcripts[i]
+            transcript = transcripts[t]
             text = ""
             words = transcript.words
             times = transcript.timestamps
+            wordslength = len(words)
             for i in range(len(words)):
-                text += '[(' + str(i) + '), ' + words[i] + ', ' + str(times[i][0]) + ', ' + str(times[i][1]) + ' ]  \n'
+                if(i%10 == 0):
+                    text += ' [' + str(i+1) + '-' + str(min(i+10, wordslength)) + '] '
+                text += words[i] + ' '
 
-            newframe.textBrowser.setPlaceholderText('[(word #), word, start_time, end_time], (WIP) DONT EDIT WORD NUMBERS AND WORDS')
-            newframe.newwords_2.setText(text)
+            newframe.DescriptionBox.setText('Word select index start (0 = start of transcript): \nWord select index end (0 = end of transcript): \nWord shift amount (seconds):\n [word# start, Word# End] (start timestamp(s), end timestamp(s))')
+            newframe.TranscriptWordBox.setText(text)
 
+            # link apply shift button to our function
+            newframe.ApplyShiftButton.clicked.connect(self.doApplyShift)
 
     def setNewTranscriptText(self, transcript):
         # TODO, Main channels should show all words of each channel
@@ -495,8 +485,10 @@ class Ui_TranscriptEditor(QMainWindow):
     def launchInit(self,transcripts, numchannels):
         self.numchannels = numchannels
         self.setOldTranscriptText(transcripts, numchannels)
+
         for i in range(numchannels+1):
             self.plotOldSpec(transcripts, i)
+
         self.initTranscriptEditor(transcripts, numchannels)
 
 
