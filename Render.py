@@ -50,7 +50,7 @@ class Transcript():
                 print('Transcript Recognizes Stereo audio')
                 self.isMono = False
                 self.isStereo = True
-                self.audiolength = audio.shape[1]
+                self.audiolength = audio.shape[0]
                 self.audio[0][0] += self.audio[0][1] #test read-only
                 
                             
@@ -117,6 +117,7 @@ class Transcript():
     #
     def RenderTranscription(self, trans, windowing=False):
         render = np.asarray(trans.audio, dtype=np.float)
+        render = render.transpose()
         renderlen = trans.audiolength
         time = trans.timestamps
         
@@ -135,17 +136,30 @@ class Transcript():
 
                 shift = trans.shifts[i]
                 sliced = trans.audio[oldstart_n:oldend_n]
+                if(trans.isStereo):
+                    sliced = sliced.transpose()
 
                 # extend/pad render length if necessary
                 if(newend_n > renderlen):  
                     l = newend_n - renderlen
-                    pad = np.zeros(l)
+
+                    #mono/stereo pad cases
+                    if(trans.isStereo):
+                        pad = np.zeros(l*2).reshape(2,l)
+                        print('r',render.shape)
+                    else:
+                        pad = np.zeros(l)
+                    print(pad.shape)
                     if(renderlen == 0):
                         render = pad
                     else:
                         # if windowing, window end piece
                         if(windowing and renderlen == trans.audiolength):
-                            render[-delay_ms:] *= np.linspace(1.0, 0.0, min(delay_ms, renderlen))
+                            if(trans.isStereo):
+                                print(min(delay_ms, renderlen), delay_ms, renderlen)
+                                render[:,-delay_ms:] *= np.linspace(1.0, 0.0, min(delay_ms, renderlen))
+                            else:
+                                render[-delay_ms:] *= np.linspace(1.0, 0.0, min(delay_ms, renderlen))
                         render = np.hstack((render, pad))
 
                     renderlen = newend_n
@@ -172,27 +186,51 @@ class Transcript():
                         
                         if(leftwordend_n != newstart_n):
                             # left index word isn't connected
-                            # window left side of this audio and right side of audio before this word
-                            print('left', i, leftwordend_n, newstart_n)
-                            sliced[:delay_ms] = (np.linspace(0.0,1.0 ,min(delay_ms, len(sliced)))*sliced[:delay_ms]).astype(int)
-                            render[oldstart_n-delay_ms:oldstart_n] *= np.linspace(1.0, 0.0, delay_ms)
+                            # window left side of this audio and right side of audio before this word                            
+                            #mono/stereo
+                            if(trans.isStereo):
+                                #print(sliced.shape)
+                                sliced[0, :delay_ms] = (np.linspace(0.0,1.0 ,min(delay_ms, sliced.shape[1]))*sliced[0,:delay_ms]).astype(int)
+                                sliced[1, :delay_ms] = (np.linspace(0.0,1.0 ,min(delay_ms, sliced.shape[1]))*sliced[1,:delay_ms]).astype(int)
+                                render[0, oldstart_n-delay_ms:oldstart_n] *= np.linspace(1.0, 0.0, delay_ms)
+                                render[1, oldstart_n-delay_ms:oldstart_n] *= np.linspace(1.0, 0.0, delay_ms)
+                            else:
+                                sliced[:delay_ms] = (np.linspace(0.0,1.0 ,min(delay_ms, len(sliced)))*sliced[:delay_ms]).astype(int)
+                                render[oldstart_n-delay_ms:oldstart_n] *= np.linspace(1.0, 0.0, delay_ms)
                     else:
                         #unique case, if i = 0 and shift != 0, window left no matter what
-                        print(i)
-                        sliced[:delay_ms] = (np.linspace(0.0,1.0 ,min(delay_ms, len(sliced)))*sliced[:delay_ms]).astype(int)
+                        #mono/stereo
+                        if(trans.isStereo):
+                            #print(sliced.shape)
+                            sliced[0, :delay_ms] = (np.linspace(0.0,1.0 ,min(delay_ms, sliced.shape[1]))*sliced[0,:delay_ms]).astype(int)
+                            sliced[1, :delay_ms] = (np.linspace(0.0,1.0 ,min(delay_ms, sliced.shape[1]))*sliced[1,:delay_ms]).astype(int)
+                        else:
+                            sliced[:delay_ms] = (np.linspace(0.0,1.0 ,min(delay_ms, len(sliced)))*sliced[:delay_ms]).astype(int)
 
                     if(i < trans.wordCount-1):
                         rightwordstart_n = time2sample(trans.timestamps[i+1][0], trans.sr)
                         
                         if(rightwordstart_n != newend_n):
                             # right word isnt in same segment, window
-                            print('right', i, rightwordstart_n, newend_n)
-                            sliced[-delay_ms:] = (np.linspace(1.0,0.0 ,min(delay_ms, len(sliced))) * sliced[-delay_ms:]).astype(int)
-                            render[oldend_n:oldend_n+delay_ms] *= np.linspace(0.0, 1.0, delay_ms)
+                            #print('right', i, rightwordstart_n, newend_n)
+                            #mono/stereo
+                            if(trans.isStereo):
+                                #print(sliced.shape)
+                                sliced[0,:delay_ms] = (np.linspace(0.0,1.0 ,min(delay_ms, sliced.shape[1]))*sliced[0,:delay_ms]).astype(int)
+                                sliced[1,:delay_ms] = (np.linspace(0.0,1.0 ,min(delay_ms, sliced.shape[1]))*sliced[1,:delay_ms]).astype(int)
+                                render[0, oldend_n:oldend_n+delay_ms] *= np.linspace(0.0, 1.0, delay_ms)
+                                render[1, oldend_n:oldend_n+delay_ms] *= np.linspace(0.0, 1.0, delay_ms)
+                            else:
+                                sliced[:delay_ms] = (np.linspace(0.0,1.0 ,min(delay_ms, len(sliced)))*sliced[:delay_ms]).astype(int)
+                                render[oldend_n:oldend_n+delay_ms] *= np.linspace(0.0, 1.0, delay_ms)
                 
                 # move sliced audio and zero pad empty space
-                render[newstart_n:newend_n] = sliced
-                render[oldstart_n:oldend_n] = 0
+                if(trans.isStereo):
+                    render[:, newstart_n:newend_n] = sliced
+                    render[:, oldstart_n:oldend_n] = 0
+                else:
+                    render[newstart_n:newend_n] = sliced
+                    render[oldstart_n:oldend_n] = 0
                 # !!!!!!!!!BACKGROUND FILL GOES HERE!!!!!!!!!!
                     
         return render

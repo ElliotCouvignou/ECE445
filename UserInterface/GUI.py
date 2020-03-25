@@ -267,8 +267,13 @@ class Ui_TranscriptEditor(QMainWindow):
             render += newrender
         
         print('Rendered, check next tab') 
-
-        f, t, spec = signal.spectrogram(render, self.oldTranscripts[0].sr)
+        #flatten to mono for spectrogram (resulting audio isnt flattened)
+        if(render.shape[0] > 1):
+            ins = render.sum(axis=0) / 2
+            f, t, spec = signal.spectrogram(ins.transpose(), self.oldTranscripts[0].sr)
+        else:
+            f, t, spec = signal.spectrogram(render, self.oldTranscripts[0].sr)
+        
 
         #spec = stft(input_sound=render, dft_size=256, hop_size=64, zero_pad=256, window=signal.hann(256))
         #t,f = FormatAxis(spec, self.oldTranscripts[0].sr, len(render)/self.oldTranscripts[0].sr)
@@ -340,10 +345,20 @@ class Ui_TranscriptEditor(QMainWindow):
                 l.removeWidget(self.oldSpecWidget)
 
             m = MplCanvas(self.oldspec_plot, width=5, height=4)
-
-            render = copy.deepcopy(self.oldTranscripts[self.numchannels-1].audio)
+            
+            # mono/stero handle
+            if(self.oldTranscripts[self.numchannels-1].isStereo):
+                render = self.oldTranscripts[self.numchannels-1].audio.sum(axis=1) / 2
+            else:
+                render = copy.deepcopy(self.oldTranscripts[self.numchannels-1].audio)
             for i in range(self.numchannels - 1):
-                newrender = self.oldTranscripts[i].audio
+                # mono/stero handle
+                if(self.oldTranscripts[i].isStereo):
+                    newrender = self.oldTranscripts[i].audio.sum(axis=1) / 2
+                else:
+                    newrender = self.oldTranscripts[i].audio
+
+                # combine renders
                 if(len(newrender) > len(render)):
                     render = np.hstack((render, np.zeros(len(newrender) - len(render))))
                 render = np.add(newrender, render)
