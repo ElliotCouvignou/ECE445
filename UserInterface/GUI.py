@@ -271,8 +271,7 @@ class Ui_TranscriptEditor(QMainWindow):
                     newrender= np.hstack((newrender, np.zeros(pad*2).reshape(2,pad)))
                 else:
                     newrender = np.hstack((newrender, np.zeros(render.shape[1] - newrender.shape[1])))
-                    
-            print(render.shape, newrender.shape)
+
             render += newrender
         
         print('Rendered, check next tab') 
@@ -316,6 +315,11 @@ class Ui_TranscriptEditor(QMainWindow):
         if(selectend == -1):
             selectend = activeTranscript.wordCount -1
         shiftamt = activeWidget.WordShiftAmount.value()
+
+        # quick check to make sure we cant shift into negative times, if this happends then move 
+        # earliest word to 0.00
+        if(activeTranscript.timestamps[selectstart][0] + shiftamt < 0):
+            shiftamt = -activeTranscript.timestamps[selectstart][0]
 
         # apply shift to timestamps and keep track of shifts in shift array
         i = selectstart
