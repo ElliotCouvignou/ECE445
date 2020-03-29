@@ -226,10 +226,10 @@ class Transcript():
                 
                 # move sliced audio and zero pad empty space
                 if(trans.isStereo):
-                    render[:, newstart_n:newend_n] = sliced
+                    render[:, newstart_n:newend_n] += sliced
                     render[:, oldstart_n:oldend_n] = 0
                 else:
-                    render[newstart_n:newend_n] = sliced
+                    render[newstart_n:newend_n] += sliced
                     render[oldstart_n:oldend_n] = 0
                 # !!!!!!!!!BACKGROUND FILL GOES HERE!!!!!!!!!!
                     
