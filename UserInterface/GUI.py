@@ -258,12 +258,21 @@ class Ui_TranscriptEditor(QMainWindow):
         render = self.oldTranscripts[self.numchannels - 1].RenderTranscription(self.oldTranscripts[self.numchannels - 1], True)
         for i in range(self.numchannels - 1):
             newrender = self.oldTranscripts[i].RenderTranscription(self.oldTranscripts[i], True)
-            # pad to length
-            if(len(newrender) > len(render)):
-                render = np.hstack((render, np.zeros(len(newrender) - len(render))))
-            elif(len(render) > len(newrender)):
-                newrender = np.hstack((newrender, np.zeros(len(render) - len(newrender))))
-
+            # pad to length w/Stereo/Mono checks
+            if(newrender.shape[1] > render.shape[1]):
+                if(render.shape[0] == 2):
+                    pad = newrender.shape[1] - render.shape[1]
+                    render = np.hstack((render, np.zeros(pad*2).reshape(2,pad)))
+                else:
+                    render = np.hstack((render, np.zeros(newrender.shape[1] - render.shape[1])))
+            elif(newrender.shape[1] < render.shape[1]):
+                if(render.shape[0] == 2):
+                    pad = render.shape[1] - newrender.shape[1]
+                    newrender= np.hstack((newrender, np.zeros(pad*2).reshape(2,pad)))
+                else:
+                    newrender = np.hstack((newrender, np.zeros(render.shape[1] - newrender.shape[1])))
+                    
+            print(render.shape, newrender.shape)
             render += newrender
         
         print('Rendered, check next tab') 
@@ -460,10 +469,14 @@ class Ui_TranscriptEditor(QMainWindow):
             wordslength = len(words)
             for i in range(len(words)):
                 if(i%10 == 0):
-                    text += ' [' + str(i+1) + '-' + str(min(i+10, wordslength)) + '] '
+                    # word segment and timestamp labeling
+                    if(i!=0):
+                        text+='\n'
+                    text += '[' + str(i+1) + ' - ' + str(min(i+10, wordslength)) + '] '
+                    text += '(' + str(times[i][0]) + ' - ' + str(times[min(i+9, wordslength-1)][1]) + '): '
                 text += words[i] + ' '
 
-            newframe.DescriptionBox.setText('Word select index start (0 = start of transcript): \nWord select index end (0 = end of transcript): \nWord shift amount (seconds):\n [word# start, Word# End] (start timestamp(s), end timestamp(s))')
+            newframe.DescriptionBox.setText('Word select index start (0 = start of transcript): \nWord select index end (0 = end of transcript): \nWord shift amount (seconds):\n [word# start, Word# End] (section starttime, section endtime)')
             newframe.TranscriptWordBox.setText(text)
 
             # link apply shift button to our function

@@ -146,17 +146,14 @@ class Transcript():
                     #mono/stereo pad cases
                     if(trans.isStereo):
                         pad = np.zeros(l*2).reshape(2,l)
-                        print('r',render.shape)
                     else:
                         pad = np.zeros(l)
-                    print(pad.shape)
                     if(renderlen == 0):
                         render = pad
                     else:
                         # if windowing, window end piece
                         if(windowing and renderlen == trans.audiolength):
                             if(trans.isStereo):
-                                print(min(delay_ms, renderlen), delay_ms, renderlen)
                                 render[:,-delay_ms:] *= np.linspace(1.0, 0.0, min(delay_ms, renderlen))
                             else:
                                 render[-delay_ms:] *= np.linspace(1.0, 0.0, min(delay_ms, renderlen))
