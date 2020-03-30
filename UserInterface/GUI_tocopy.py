@@ -2,16 +2,18 @@
 
 # Form implementation generated from reading ui file 'GUI.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.14.1
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_TranscriptEditor(object):
     def setupUi(self, TranscriptEditor):
         TranscriptEditor.setObjectName("TranscriptEditor")
-        TranscriptEditor.resize(1142, 685)
+        TranscriptEditor.resize(1220, 799)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -140,6 +142,60 @@ class Ui_TranscriptEditor(object):
         self.EditorChannelsTab.addTab(self.tab_8, "")
         self.gridLayout_6.addWidget(self.EditorChannelsTab, 1, 0, 1, 1)
         self.TabWidget.addTab(self.tab, "")
+        self.tab_3 = QtWidgets.QWidget()
+        self.tab_3.setObjectName("tab_3")
+        self.RenderSettingsFrame = QtWidgets.QFrame(self.tab_3)
+        self.RenderSettingsFrame.setGeometry(QtCore.QRect(10, 20, 1141, 671))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.RenderSettingsFrame.sizePolicy().hasHeightForWidth())
+        self.RenderSettingsFrame.setSizePolicy(sizePolicy)
+        self.RenderSettingsFrame.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.RenderSettingsFrame.setAutoFillBackground(True)
+        self.RenderSettingsFrame.setFrameShape(QtWidgets.QFrame.Box)
+        self.RenderSettingsFrame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.RenderSettingsFrame.setObjectName("RenderSettingsFrame")
+        self.PauseShorteningFrame = QtWidgets.QFrame(self.RenderSettingsFrame)
+        self.PauseShorteningFrame.setGeometry(QtCore.QRect(12, 12, 341, 131))
+        self.PauseShorteningFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.PauseShorteningFrame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.PauseShorteningFrame.setObjectName("PauseShorteningFrame")
+        self.gridLayout_10 = QtWidgets.QGridLayout(self.PauseShorteningFrame)
+        self.gridLayout_10.setObjectName("gridLayout_10")
+        self.PauseShorteningText = QtWidgets.QTextEdit(self.PauseShorteningFrame)
+        self.PauseShorteningText.setObjectName("PauseShorteningText")
+        self.gridLayout_10.addWidget(self.PauseShorteningText, 0, 0, 1, 1)
+        self.PauseShorteningButton = QtWidgets.QRadioButton(self.PauseShorteningFrame)
+        self.PauseShorteningButton.setChecked(False)
+        self.PauseShorteningButton.setObjectName("PauseShorteningButton")
+        self.gridLayout_10.addWidget(self.PauseShorteningButton, 1, 0, 1, 1)
+        self.PauseShortenAmountBox = QtWidgets.QDoubleSpinBox(self.PauseShorteningFrame)
+        self.PauseShortenAmountBox.setObjectName("PauseShortenAmountBox")
+        self.gridLayout_10.addWidget(self.PauseShortenAmountBox, 2, 0, 1, 1)
+        self.BackgrundNoiseFillFrame = QtWidgets.QFrame(self.RenderSettingsFrame)
+        self.BackgrundNoiseFillFrame.setGeometry(QtCore.QRect(360, 10, 241, 121))
+        self.BackgrundNoiseFillFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.BackgrundNoiseFillFrame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.BackgrundNoiseFillFrame.setObjectName("BackgrundNoiseFillFrame")
+        self.BackGroundNoiseFillerText = QtWidgets.QTextEdit(self.BackgrundNoiseFillFrame)
+        self.BackGroundNoiseFillerText.setGeometry(QtCore.QRect(10, 20, 191, 31))
+        self.BackGroundNoiseFillerText.setObjectName("BackGroundNoiseFillerText")
+        self.BackgroundNoiseFillButton = QtWidgets.QRadioButton(self.BackgrundNoiseFillFrame)
+        self.BackgroundNoiseFillButton.setGeometry(QtCore.QRect(10, 60, 191, 19))
+        self.BackgroundNoiseFillButton.setObjectName("BackgroundNoiseFillButton")
+        self.WindowingEnableFrame = QtWidgets.QFrame(self.RenderSettingsFrame)
+        self.WindowingEnableFrame.setGeometry(QtCore.QRect(610, 10, 291, 81))
+        self.WindowingEnableFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.WindowingEnableFrame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.WindowingEnableFrame.setObjectName("WindowingEnableFrame")
+        self.CrossfadeEnableText = QtWidgets.QTextEdit(self.WindowingEnableFrame)
+        self.CrossfadeEnableText.setGeometry(QtCore.QRect(10, 10, 271, 31))
+        self.CrossfadeEnableText.setObjectName("CrossfadeEnableText")
+        self.CrossfadeEnableButton = QtWidgets.QRadioButton(self.WindowingEnableFrame)
+        self.CrossfadeEnableButton.setGeometry(QtCore.QRect(10, 50, 231, 19))
+        self.CrossfadeEnableButton.setObjectName("CrossfadeEnableButton")
+        self.TabWidget.addTab(self.tab_3, "")
         self.tab2 = QtWidgets.QWidget()
         self.tab2.setObjectName("tab2")
         self.gridLayout_5 = QtWidgets.QGridLayout(self.tab2)
@@ -205,7 +261,7 @@ class Ui_TranscriptEditor(object):
         self.gridLayout.addWidget(self.TabWidget, 0, 0, 1, 1)
 
         self.retranslateUi(TranscriptEditor)
-        self.TabWidget.setCurrentIndex(1)
+        self.TabWidget.setCurrentIndex(0)
         self.OriginalChannelTabs.setCurrentIndex(0)
         self.EditorChannelsTab.setCurrentIndex(0)
         self.RenderedChannelTabs.setCurrentIndex(0)
@@ -219,7 +275,26 @@ class Ui_TranscriptEditor(object):
         self.RenderButton.setText(_translate("TranscriptEditor", "Render"))
         self.EditorChannelsTab.setTabText(self.EditorChannelsTab.indexOf(self.tab_8), _translate("TranscriptEditor", "Channel 1"))
         self.TabWidget.setTabText(self.TabWidget.indexOf(self.tab), _translate("TranscriptEditor", "Transcript Editor"))
+        self.PauseShorteningText.setHtml(_translate("TranscriptEditor", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Pause Shortening:</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Enter max pause amount in slider. Any pauses &gt; amount gets shortened to amount</p></body></html>"))
+        self.PauseShorteningButton.setText(_translate("TranscriptEditor", "Enable Pause Shorterning"))
+        self.BackGroundNoiseFillerText.setHtml(_translate("TranscriptEditor", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Background Noise Filler:</span></p></body></html>"))
+        self.BackgroundNoiseFillButton.setText(_translate("TranscriptEditor", "Enable Background Noise Filler"))
+        self.CrossfadeEnableText.setHtml(_translate("TranscriptEditor", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Crossfade start/ends of sliced semgents:</span></p></body></html>"))
+        self.CrossfadeEnableButton.setText(_translate("TranscriptEditor", "Enable Crossfade on edited segments"))
+        self.TabWidget.setTabText(self.TabWidget.indexOf(self.tab_3), _translate("TranscriptEditor", "Render Settings"))
         self.SetOriginalButton.setText(_translate("TranscriptEditor", "Set as Original"))
         self.RenderedChannelTabs.setTabText(self.RenderedChannelTabs.indexOf(self.tab_6), _translate("TranscriptEditor", "Main Channel"))
         self.TabWidget.setTabText(self.TabWidget.indexOf(self.tab2), _translate("TranscriptEditor", "Rendered Transcription"))
-

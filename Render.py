@@ -27,6 +27,17 @@ class MyRecognizeCallback(RecognizeCallback):
 
     def on_inactivity_timeout(self, error):
         print('Inactivity timeout: {}'.format(error))
+
+
+# this is a class that holds all the parameters for each render feature in one class. This is so we dont
+# flood the parameter space in each function header
+class RenderSettings():
+    def __init__(self):
+        self.pauseShortenEnable = False;
+        self.pauseShortenAmount = 0.0;
+        self.backgroundFillEnable = False;
+        self.crossfadeEnable = False;
+
         
 class Transcript():
     def __init__(self):
@@ -115,7 +126,7 @@ class Transcript():
     # Transcript.words[i] = i-th word
     # Transcript.timestamps[i] = start/end times for i-th word
     #
-    def RenderTranscription(self, trans, windowing=False):
+    def RenderTranscription(self, trans, RenderSettings):
         render = np.asarray(trans.audio, dtype=np.float)
         render = render.transpose()
         renderlen = trans.audiolength
@@ -152,7 +163,7 @@ class Transcript():
                         render = pad
                     else:
                         # if windowing, window end piece
-                        if(windowing and renderlen == trans.audiolength):
+                        if(RenderSettings.crossfadeEnable and renderlen == trans.audiolength):
                             if(trans.isStereo):
                                 render[:,-delay_ms:] *= np.linspace(1.0, 0.0, min(delay_ms, renderlen))
                             else:
@@ -173,7 +184,7 @@ class Transcript():
 
                 # place audio slice into render
                 # if we are windowing then we need to crossfade before slice, after slice, and both sides of slice
-                if(windowing):
+                if(RenderSettings.crossfadeEnable):
                     # windowing slcied audio first
                     # this is complicated, if trans.shifts[i+1] == shifts[i] then these words are in the same segment
                     # if this is true we dont window their connections since they are still one piece
