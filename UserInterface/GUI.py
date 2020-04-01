@@ -331,6 +331,12 @@ class Ui_TranscriptEditor(QMainWindow):
         # read rendersettings to send as render parameter
         rendersettings = self.readRenderSettings()
 
+        # setup to find overlap
+        if(rendersettings.pauseShortenEnable):
+            for i in range(self.numchannels):
+                self.oldTranscripts[i].findPauses()
+            self.oldTranscripts[0].findOverlappingPauses(self.oldTranscripts, rendersettings)
+
         render = self.oldTranscripts[self.numchannels - 1].RenderTranscription(self.oldTranscripts[self.numchannels - 1], rendersettings)
         for i in range(self.numchannels - 1):
             newrender = self.oldTranscripts[i].RenderTranscription(self.oldTranscripts[i], rendersettings)

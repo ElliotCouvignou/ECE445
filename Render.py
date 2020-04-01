@@ -35,9 +35,12 @@ class RenderSettings():
     def __init__(self):
         self.pauseShortenEnable = False;
         self.pauseShortenAmount = 0.0;
+        self.pauseOverlap = []
         self.backgroundFillEnable = False;
         self.crossfadeEnable = False;
-
+    
+    def setPauseOverlap(self, new):
+        self.pauseOverlap = new
         
 class Transcript():
     def __init__(self):
@@ -120,7 +123,78 @@ class Transcript():
                 self.timestamps = np.hstack((self.timestamps, transcript.timestamps))
 
         self.audiolength = len(self.timestamps)
-        self.quicksort( ( 0, self.audiolength-1) )        
+        self.quicksort( ( 0, self.audiolength-1) )    
+
+    # trans = transcript array to find overlapping pauses 
+    def findPauses(self):
+        # format of self.pauses is tuple ranges of pauses (like timestamps)
+        self.pauses = []
+        curtime = 0.0
+        # this is prettty much taking the inverse of timestamps
+        for i in range(len(self.timestamps)):
+            times = self.timestamps[i]            
+            tup = (0.0, 0.0)
+            if(times[0] > curtime):
+                tup = (curtime, times[0])
+                self.pauses.append(tup)
+
+            # set maerker to end of spoken word     
+            curtime = times[1] 
+
+        # check from here until end of audio
+        if(curtime < len(self.audio) / self.sr):
+            tup = (curtime, len(self.audio) / self.sr)
+            self.pauses.append(tup)
+        
+        self.pauses = np.asarray(self.pauses)
+        print('pauses:', self.pauses)
+
+    # trans = transcript array of transcripts with their self.pauses already filled
+    def findOverlappingPauses(self, trans, RenderSettings):
+        numchannels = len(trans)
+        # same format as timestamps
+        pauseOverlap = []
+        channel_iters = [0] * numchannels
+        #dt = np.dtype(trans[0].pauses)
+        Rtime = 0.0
+        Ltime = 0.0
+        done = False
+        # method: find intervals, go trhough channel 0's pauses and see any overlaps from there
+        for i in range(len(trans[0].pauses)):
+            currentPause = trans[0].pauses[i]
+            Ltime = currentPause[0]
+            Rtime = currentPause[1]
+            # through each channel
+            for c in range(numchannels):
+                # through last seen puase on channel until end
+                for p in range(channel_iters[c], len(trans[c].pauses)):
+                    # find and intersect with currentPause
+                    thisPause = trans[c].pauses[p]
+                    
+                    # check if thisPause[0] within current range
+                    inRange = False
+                    if(Ltime <= thisPause[0] and Rtime >= thisPause[0]):
+                        Ltime = thisPause[0]
+                        inRange = True
+                    if(Ltime <= thisPause[1] and Rtime >= thisPause[1])
+                        Rtime = thisPause[1]
+                        inRange = True
+                    
+                    if(!inRange):
+                        # force break out of c and p loops, onto next i
+                        p = len(trans[c].pauses) - 1
+                        c = numchannels - 1
+
+        # sort tuples by their start times (first element)
+        print('b4', ranges)
+        ranges.sort(axis=0)
+        print('a4', ranges)
+
+        # choose one channel (0) and compare overlaps with rest
+        #trans0 = trans[0]
+        #for times in range(len(trans0.pauses)):
+
+            
         
     #
     # Transcript.words[i] = i-th word
@@ -131,6 +205,7 @@ class Transcript():
         render = render.transpose()
         renderlen = trans.audiolength
         time = trans.timestamps
+
         
         # ATM doinglinear crossfade (75ms) via np.linspace
         delay_ms = round(.075 * trans.sr) # 75 ms for now. based on feel, FOR WINDOWING
