@@ -179,6 +179,7 @@ class Transcript():
                         # check down other channels
                         thisIntersection = intersection
                         inInterval = True
+                        channel_iters[c] = p
                     
                     # check if thisPause[0] within current range
                     #inRange = False
