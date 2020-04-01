@@ -147,7 +147,7 @@ class Transcript():
             self.pauses.append(tup)
         
         self.pauses = np.asarray(self.pauses)
-        print('pauses:', self.pauses)
+        print("pauses: ", self.pauses)
 
     # trans = transcript array of transcripts with their self.pauses already filled
     def findOverlappingPauses(self, trans, RenderSettings):
@@ -162,39 +162,54 @@ class Transcript():
         # method: find intervals, go trhough channel 0's pauses and see any overlaps from there
         for i in range(len(trans[0].pauses)):
             currentPause = trans[0].pauses[i]
+
             Ltime = currentPause[0]
             Rtime = currentPause[1]
-            # through each channel
-            for c in range(numchannels):
+            # through each channel from 1 onwards
+            thisIntersection = currentPause
+            inInterval = False
+            for c in range(1,numchannels):
                 # through last seen puase on channel until end
                 for p in range(channel_iters[c], len(trans[c].pauses)):
                     # find and intersect with currentPause
                     thisPause = trans[c].pauses[p]
                     
-                    # check if thisPause[0] within current range
-                    inRange = False
-                    if(Ltime <= thisPause[0] and Rtime >= thisPause[0]):
-                        Ltime = thisPause[0]
-                        inRange = True
-                    if(Ltime <= thisPause[1] and Rtime >= thisPause[1])
-                        Rtime = thisPause[1]
-                        inRange = True
+                    intersection = self.getIntersection(thisPause, thisIntersection)
+                    if(intersection != None):
+                        # check down other channels
+                        thisIntersection = intersection
+                        inInterval = True
                     
-                    if(!inRange):
-                        # force break out of c and p loops, onto next i
-                        p = len(trans[c].pauses) - 1
-                        c = numchannels - 1
+                    # check if thisPause[0] within current range
+                    #inRange = False
+                    #if(Ltime <= thisPause[0] and Rtime >= thisPause[0]):
+                    #    Ltime = thisPause[0]
+                    #    inRange = True
+                    #    channel_iters[c] = p
+                    #if(Ltime <= thisPause[1] and Rtime >= thisPause[1]):
+                    #    Rtime = thisPause[1]
+                    #    inRange = True
+                    #    channel_iters[c] = p
+                    #
+                    #if(inRange):
+                    #    # force break out  p loop onto next c
+                    #    p = len(trans[c].pauses) - 1
+                    #elif(p == len(trans[c].pauses)-1):
+                    #    # if we reached end of this, then no interval so skip rest of channels
+                    #    inInterval = False
+                    #    c = len(trans[c].pauses)
+            if(inInterval):
+                pauseOverlap.append(thisIntersection)       
+        
+        print(pauseOverlap)
 
-        # sort tuples by their start times (first element)
-        print('b4', ranges)
-        ranges.sort(axis=0)
-        print('a4', ranges)
-
-        # choose one channel (0) and compare overlaps with rest
-        #trans0 = trans[0]
-        #for times in range(len(trans0.pauses)):
-
-            
+    # helper function for above
+    def getIntersection(self, interval_1, interval_2):
+        start = max(interval_1[0], interval_2[0])
+        end = min(interval_1[1], interval_2[1])
+        if start < end:
+            return (start, end)
+        return None
         
     #
     # Transcript.words[i] = i-th word

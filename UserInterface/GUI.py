@@ -331,6 +331,10 @@ class Ui_TranscriptEditor(QMainWindow):
         # read rendersettings to send as render parameter
         rendersettings = self.readRenderSettings()
 
+        # order timestamps for rendering optimizatons
+        for i in range(self.numchannels):
+            self.oldTranscripts[i].quicksort( (0, len(self.oldTranscripts[i].timestamps) - 1) )
+
         # setup to find overlap
         if(rendersettings.pauseShortenEnable):
             for i in range(self.numchannels):
@@ -369,8 +373,7 @@ class Ui_TranscriptEditor(QMainWindow):
         #t,f = FormatAxis(spec, self.oldTranscripts[0].sr, len(render)/self.oldTranscripts[0].sr)
         self.plotNewSpec(spec, t, f)
 
-        for i in range(self.numchannels):
-            self.oldTranscripts[i].quicksort( (0, len(self.oldTranscripts[i].timestamps) - 1) )
+        
         
         maintrans = Transcript()
         maintrans.MainFromOthers(self.oldTranscripts)
