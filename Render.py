@@ -20,7 +20,10 @@ class MyRecognizeCallback(RecognizeCallback):
         RecognizeCallback.__init__(self)
 
     def on_data(self, data):
-        print(json.dumps(data, indent=2))
+        global result
+        result = data.get('results')
+        #print(result)
+
 
     def on_error(self, error):
         print('Error received: {}'.format(error))
@@ -179,7 +182,6 @@ class Transcript():
                         # check down other channels
                         thisIntersection = intersection
                         inInterval = True
-                        channel_iters[c] = p
                     
                     # check if thisPause[0] within current range
                     #inRange = False
@@ -380,34 +382,36 @@ class Transcript():
         # Create a helper function that will be called recursively
         self._quick_sort(range[0], range[1])
    
-    def ibm_recog(self,audioname,audiofp,ctype):
+    def ibm_recog(self,audioname,audiofp):
         authenticator = IAMAuthenticator('6noBhxJHkbRVsgbxsl47v6dFZnJdoRRrDRYte7GgKKxu')
         speech_to_text = SpeechToTextV1(authenticator=authenticator)
         speech_to_text.set_service_url('https://api.us-south.speech-to-text.watson.cloud.ibm.com/instances/51085e72-7959-4c18-94cd-d4d874baf61d')
         myRecognizeCallback = MyRecognizeCallback()
+        ts = []
+        c = []
     
         with open(join(dirname(audioname), audiofp), 'rb') as audio_file:
         
             audio_source = AudioSource(audio_file)
         
-            x = speech_to_text.recognize(
-                audio=audio_file,
-                content_type=ctype,
+            x = speech_to_text.recognize_using_websocket(
+                audio=audio_source,
+                content_type='audio/mp3',
+                inactivity_timeout = -1,
                 recognize_callback=myRecognizeCallback,
                 model='en-US_BroadbandModel',
                 timestamps=True,
-            #smart_formatting=True
+                smart_formatting=True,
             )
-        result = x.result
-        alternatives = result.get('results')[0].get('alternatives')[0]
-        transcript = alternatives.get('transcript')
-        timestamps = alternatives.get('timestamps')
-        confidence = alternatives.get('confidence')
-        #a,sr=open_audio(audiofp)
-        sr, a = wavfile.read(audiofp)
-
-        #a = DSP.normalize(a)
-        self.initAudio(a, sr)
+            
+        for r in result:
+            alternatives = r.get('alternatives')
+            ts.append(alternatives[0].get('timestamps'))
+            timestamps = [elem for twod in ts for elem in twod] 
+            c.append(alternatives[0].get('confidence'))
+            confidence = sum(c)/len(c)  
+        a,sr=open_audio(audiofp)
+        self.initAudio(a,sr)
         self.setupIBM(timestamps,confidence)
 
 
