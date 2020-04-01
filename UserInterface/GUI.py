@@ -422,7 +422,8 @@ class Ui_TranscriptEditor(QMainWindow):
         end = min(activeTranscript.audiolength, selectend)
         while i <= end:
             tup = activeTranscript.timestamps[i]
-            activeTranscript.timestamps[i] = (tup[0] + shiftamt, tup[1] + shiftamt)
+            tup = (tup[0] + shiftamt, tup[1] + shiftamt)
+            activeTranscript.timestamps[i] = tup
             activeTranscript.shifts[i] += shiftamt
             i += 1
         

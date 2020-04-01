@@ -49,6 +49,7 @@ class Transcript():
     def __init__(self):
         self.words = np.array(['wordwordwordwordwordword'])
         self.timestamps = np.array([0.00], dtype=object)
+        self.shifts = np.array([0.00], dtype=object)
 
 
     def initAudio(self, audio, sr):
@@ -102,6 +103,10 @@ class Transcript():
         self.timestamps[j] = self.timestamps[i]
         self.timestamps[i] = tmp
 
+        tmp = self.shifts[j]
+        self.shifts[j] = self.shifts[i]
+        self.shifts[i] = tmp
+
     def getSpec(self):
         if(self.isMono):
             f, t, spec = signal.spectrogram(self.audio, self.sr)
@@ -124,9 +129,11 @@ class Transcript():
             else:
                 self.words = np.hstack((self.words, transcript.words))
                 self.timestamps = np.hstack((self.timestamps, transcript.timestamps))
-
+        
         self.audiolength = len(self.timestamps)
+        self.shifts = [(0.0, 0.0)] * self.audiolength
         self.quicksort( ( 0, self.audiolength-1) )    
+        
 
     # trans = transcript array to find overlapping pauses 
     def findPauses(self):
@@ -150,7 +157,6 @@ class Transcript():
             self.pauses.append(tup)
         
         self.pauses = np.asarray(self.pauses)
-        print("pauses: ", self.pauses)
 
     # trans = transcript array of transcripts with their self.pauses already filled
     def findOverlappingPauses(self, trans, RenderSettings):
@@ -223,7 +229,6 @@ class Transcript():
         render = render.transpose()
         renderlen = trans.audiolength
         time = trans.timestamps
-
         
         # ATM doinglinear crossfade (75ms) via np.linspace
         delay_ms = round(.075 * trans.sr) # 75 ms for now. based on feel, FOR WINDOWING
