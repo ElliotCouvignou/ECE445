@@ -23,18 +23,33 @@ class MyRecognizeCallback(RecognizeCallback):
         global result
         result = data.get('results')
         #print(result)
-        
+
+
     def on_error(self, error):
         print('Error received: {}'.format(error))
 
     def on_inactivity_timeout(self, error):
         print('Inactivity timeout: {}'.format(error))
+
+
+# this is a class that holds all the parameters for each render feature in one class. This is so we dont
+# flood the parameter space in each function header
+class RenderSettings():
+    def __init__(self):
+        self.pauseShortenEnable = False;
+        self.pauseShortenAmount = 0.0;
+        self.pauseOverlap = []
+        self.backgroundFillEnable = False;
+        self.crossfadeEnable = False;
     
+    def setPauseOverlap(self, new):
+        self.pauseOverlap = new
         
 class Transcript():
     def __init__(self):
         self.words = np.array(['wordwordwordwordwordword'])
         self.timestamps = np.array([0.00], dtype=object)
+        self.shifts = np.array([0.00], dtype=object)
 
 
     def initAudio(self, audio, sr):
@@ -88,6 +103,10 @@ class Transcript():
         self.timestamps[j] = self.timestamps[i]
         self.timestamps[i] = tmp
 
+        tmp = self.shifts[j]
+        self.shifts[j] = self.shifts[i]
+        self.shifts[i] = tmp
+
     def getSpec(self):
         if(self.isMono):
             f, t, spec = signal.spectrogram(self.audio, self.sr)
@@ -110,15 +129,102 @@ class Transcript():
             else:
                 self.words = np.hstack((self.words, transcript.words))
                 self.timestamps = np.hstack((self.timestamps, transcript.timestamps))
-
+        
         self.audiolength = len(self.timestamps)
-        self.quicksort( ( 0, self.audiolength-1) )        
+        self.shifts = [(0.0, 0.0)] * self.audiolength
+        self.quicksort( ( 0, self.audiolength-1) )    
+        
+
+    # trans = transcript array to find overlapping pauses 
+    def findPauses(self):
+        # format of self.pauses is tuple ranges of pauses (like timestamps)
+        self.pauses = []
+        curtime = 0.0
+        # this is prettty much taking the inverse of timestamps
+        for i in range(len(self.timestamps)):
+            times = self.timestamps[i]            
+            tup = (0.0, 0.0)
+            if(times[0] > curtime):
+                tup = (curtime, times[0])
+                self.pauses.append(tup)
+
+            # set maerker to end of spoken word     
+            curtime = times[1] 
+
+        # check from here until end of audio
+        if(curtime < len(self.audio) / self.sr):
+            tup = (curtime, len(self.audio) / self.sr)
+            self.pauses.append(tup)
+        
+        self.pauses = np.asarray(self.pauses)
+
+    # trans = transcript array of transcripts with their self.pauses already filled
+    def findOverlappingPauses(self, trans, RenderSettings):
+        numchannels = len(trans)
+        # same format as timestamps
+        pauseOverlap = []
+        channel_iters = [0] * numchannels
+        #dt = np.dtype(trans[0].pauses)
+        Rtime = 0.0
+        Ltime = 0.0
+        done = False
+        # method: find intervals, go trhough channel 0's pauses and see any overlaps from there
+        for i in range(len(trans[0].pauses)):
+            currentPause = trans[0].pauses[i]
+
+            Ltime = currentPause[0]
+            Rtime = currentPause[1]
+            # through each channel from 1 onwards
+            thisIntersection = currentPause
+            inInterval = False
+            for c in range(1,numchannels):
+                # through last seen puase on channel until end
+                for p in range(channel_iters[c], len(trans[c].pauses)):
+                    # find and intersect with currentPause
+                    thisPause = trans[c].pauses[p]
+                    
+                    intersection = self.getIntersection(thisPause, thisIntersection)
+                    if(intersection != None):
+                        # check down other channels
+                        thisIntersection = intersection
+                        inInterval = True
+                    
+                    # check if thisPause[0] within current range
+                    #inRange = False
+                    #if(Ltime <= thisPause[0] and Rtime >= thisPause[0]):
+                    #    Ltime = thisPause[0]
+                    #    inRange = True
+                    #    channel_iters[c] = p
+                    #if(Ltime <= thisPause[1] and Rtime >= thisPause[1]):
+                    #    Rtime = thisPause[1]
+                    #    inRange = True
+                    #    channel_iters[c] = p
+                    #
+                    #if(inRange):
+                    #    # force break out  p loop onto next c
+                    #    p = len(trans[c].pauses) - 1
+                    #elif(p == len(trans[c].pauses)-1):
+                    #    # if we reached end of this, then no interval so skip rest of channels
+                    #    inInterval = False
+                    #    c = len(trans[c].pauses)
+            if(inInterval):
+                pauseOverlap.append(thisIntersection)       
+        
+        print(pauseOverlap)
+
+    # helper function for above
+    def getIntersection(self, interval_1, interval_2):
+        start = max(interval_1[0], interval_2[0])
+        end = min(interval_1[1], interval_2[1])
+        if start < end:
+            return (start, end)
+        return None
         
     #
     # Transcript.words[i] = i-th word
     # Transcript.timestamps[i] = start/end times for i-th word
     #
-    def RenderTranscription(self, trans, windowing=False):
+    def RenderTranscription(self, trans, RenderSettings):
         render = np.asarray(trans.audio, dtype=np.float)
         render = render.transpose()
         renderlen = trans.audiolength
@@ -155,7 +261,7 @@ class Transcript():
                         render = pad
                     else:
                         # if windowing, window end piece
-                        if(windowing and renderlen == trans.audiolength):
+                        if(RenderSettings.crossfadeEnable and renderlen == trans.audiolength):
                             if(trans.isStereo):
                                 render[:,-delay_ms:] *= np.linspace(1.0, 0.0, min(delay_ms, renderlen))
                             else:
@@ -176,7 +282,7 @@ class Transcript():
 
                 # place audio slice into render
                 # if we are windowing then we need to crossfade before slice, after slice, and both sides of slice
-                if(windowing):
+                if(RenderSettings.crossfadeEnable):
                     # windowing slcied audio first
                     # this is complicated, if trans.shifts[i+1] == shifts[i] then these words are in the same segment
                     # if this is true we dont window their connections since they are still one piece
