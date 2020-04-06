@@ -21,7 +21,7 @@ class TranscriptEditorFrame(QtWidgets.QWidget):
         sizePolicy.setHeightForWidth(Form.sizePolicy().hasHeightForWidth())
         Form.setSizePolicy(sizePolicy)
         self.EditTransFrame = QtWidgets.QFrame(Form)
-        self.EditTransFrame.setGeometry(QtCore.QRect(30, 20, 1920, 1080))
+        self.EditTransFrame.setGeometry(QtCore.QRect(30, 20, 1500, 800))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)

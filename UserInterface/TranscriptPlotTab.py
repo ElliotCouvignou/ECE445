@@ -16,7 +16,7 @@ class TranscriptPlotFrame(QtWidgets.QWidget):
         Form.setObjectName("Form")
         Form.resize(1920, 1080)
         self.OldTransFrame = QtWidgets.QFrame(Form)
-        self.OldTransFrame.setGeometry(QtCore.QRect(0, 10, 1920, 1080))
+        self.OldTransFrame.setGeometry(QtCore.QRect(0, 10, 1500, 800))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
