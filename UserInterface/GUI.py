@@ -575,7 +575,7 @@ class Ui_TranscriptEditor(QMainWindow):
             self.oldTranscripts = []
             for i in range(numchannels):
                 # duplicate frame, create new tab and place
-                tabname = "Channel " + str(i+1)
+                tabname = "Speaker " + str(i+1)
     
                 newtab = QtWidgets.QWidget()
                 newframe = TranscriptPlotFrame(self.OriginalChannelTabs)
