@@ -110,27 +110,13 @@ class Ui_TranscriptEditor(QMainWindow):
         self.tab.setObjectName("tab")
         self.gridLayout_6 = QtWidgets.QGridLayout(self.tab)
         self.gridLayout_6.setObjectName("gridLayout_6")
-        self.RenderButton = QtWidgets.QPushButton(self.tab)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.RenderButton.sizePolicy().hasHeightForWidth())
-        self.RenderButton.setSizePolicy(sizePolicy)
-        self.RenderButton.setIconSize(QtCore.QSize(18, 18))
-        self.RenderButton.setObjectName("RenderButton")
-        self.gridLayout_6.addWidget(self.RenderButton, 0, 0, 1, 1)
-        self.frame = QtWidgets.QFrame(self.tab)
-        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame.setObjectName("frame")
-        self.gridLayout_6.addWidget(self.frame, 2, 0, 1, 1)
-        self.EditorChannelsTab = QtWidgets.QTabWidget(self.tab)
-        self.EditorChannelsTab.setObjectName("EditorChannelsTab")
-        self.tab_8 = QtWidgets.QWidget()
-        self.tab_8.setObjectName("tab_8")
-        self.gridLayout_12 = QtWidgets.QGridLayout(self.tab_8)
-        self.gridLayout_12.setObjectName("gridLayout_12")
-        self.EditTransFrame = QtWidgets.QFrame(self.tab_8)
+        self.frame_2 = QtWidgets.QFrame(self.tab)
+        self.frame_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame_2.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame_2.setObjectName("frame_2")
+        self.gridLayout_9 = QtWidgets.QGridLayout(self.frame_2)
+        self.gridLayout_9.setObjectName("gridLayout_9")
+        self.EditTransFrame = QtWidgets.QFrame(self.frame_2)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -143,32 +129,75 @@ class Ui_TranscriptEditor(QMainWindow):
         self.EditTransFrame.setObjectName("EditTransFrame")
         self.gridLayout_7 = QtWidgets.QGridLayout(self.EditTransFrame)
         self.gridLayout_7.setObjectName("gridLayout_7")
-        self.newwords_2 = QtWidgets.QTextEdit(self.EditTransFrame)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding)
+        self.ChannelSelectBox = QtWidgets.QSpinBox(self.EditTransFrame)
+        self.ChannelSelectBox.setMaximum(0)
+        self.ChannelSelectBox.setObjectName("ChannelSelectBox")
+        self.gridLayout_7.addWidget(self.ChannelSelectBox, 0, 1, 1, 1)
+        self.WordShiftAmount = QtWidgets.QDoubleSpinBox(self.EditTransFrame)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.newwords_2.sizePolicy().hasHeightForWidth())
-        self.newwords_2.setSizePolicy(sizePolicy)
-        self.newwords_2.setObjectName("newwords_2")
-        self.gridLayout_7.addWidget(self.newwords_2, 1, 0, 1, 2)
-        self.textBrowser = QtWidgets.QTextBrowser(self.EditTransFrame)
+        sizePolicy.setHeightForWidth(self.WordShiftAmount.sizePolicy().hasHeightForWidth())
+        self.WordShiftAmount.setSizePolicy(sizePolicy)
+        self.WordShiftAmount.setMinimum(-9999999.0)
+        self.WordShiftAmount.setMaximum(9999999.0)
+        self.WordShiftAmount.setObjectName("WordShiftAmount")
+        self.gridLayout_7.addWidget(self.WordShiftAmount, 3, 1, 1, 1)
+        self.ApplyShiftButton = QtWidgets.QPushButton(self.EditTransFrame)
+        self.ApplyShiftButton.setObjectName("ApplyShiftButton")
+        self.gridLayout_7.addWidget(self.ApplyShiftButton, 4, 1, 1, 1)
+        self.WordSelectStart = QtWidgets.QSpinBox(self.EditTransFrame)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.WordSelectStart.sizePolicy().hasHeightForWidth())
+        self.WordSelectStart.setSizePolicy(sizePolicy)
+        self.WordSelectStart.setObjectName("WordSelectStart")
+        self.gridLayout_7.addWidget(self.WordSelectStart, 1, 1, 1, 1)
+        self.WordSelectEnd = QtWidgets.QSpinBox(self.EditTransFrame)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.WordSelectEnd.sizePolicy().hasHeightForWidth())
+        self.WordSelectEnd.setSizePolicy(sizePolicy)
+        self.WordSelectEnd.setObjectName("WordSelectEnd")
+        self.gridLayout_7.addWidget(self.WordSelectEnd, 2, 1, 1, 1)
+        self.TranscriptWordBox = QtWidgets.QTextBrowser(self.EditTransFrame)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Ignored)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.textBrowser.sizePolicy().hasHeightForWidth())
-        self.textBrowser.setSizePolicy(sizePolicy)
-        self.textBrowser.setTabStopDistance(88.0)
-        self.textBrowser.setPlaceholderText("")
-        self.textBrowser.setObjectName("textBrowser")
-        self.gridLayout_7.addWidget(self.textBrowser, 0, 0, 1, 1)
-        self.gridLayout_12.addWidget(self.EditTransFrame, 0, 0, 1, 1)
-        self.EditorChannelsTab.addTab(self.tab_8, "")
-        self.gridLayout_6.addWidget(self.EditorChannelsTab, 1, 0, 1, 1)
+        sizePolicy.setHeightForWidth(self.TranscriptWordBox.sizePolicy().hasHeightForWidth())
+        self.TranscriptWordBox.setSizePolicy(sizePolicy)
+        self.TranscriptWordBox.setTabStopDistance(88.0)
+        self.TranscriptWordBox.setPlaceholderText("")
+        self.TranscriptWordBox.setObjectName("TranscriptWordBox")
+        self.gridLayout_7.addWidget(self.TranscriptWordBox, 6, 0, 1, 2)
+        self.RenderButton = QtWidgets.QPushButton(self.EditTransFrame)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.RenderButton.sizePolicy().hasHeightForWidth())
+        self.RenderButton.setSizePolicy(sizePolicy)
+        self.RenderButton.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        self.RenderButton.setIconSize(QtCore.QSize(18, 18))
+        self.RenderButton.setObjectName("RenderButton")
+        self.gridLayout_7.addWidget(self.RenderButton, 5, 1, 1, 1)
+        self.DescriptionBox = QtWidgets.QTextBrowser(self.EditTransFrame)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Maximum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.DescriptionBox.sizePolicy().hasHeightForWidth())
+        self.DescriptionBox.setSizePolicy(sizePolicy)
+        self.DescriptionBox.setObjectName("DescriptionBox")
+        self.gridLayout_7.addWidget(self.DescriptionBox, 0, 0, 6, 1)
+        self.gridLayout_9.addWidget(self.EditTransFrame, 0, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.frame_2, 1, 0, 1, 1)
         self.TabWidget.addTab(self.tab, "")
         self.tab_3 = QtWidgets.QWidget()
         self.tab_3.setObjectName("tab_3")
+        self.gridLayout_12 = QtWidgets.QGridLayout(self.tab_3)
+        self.gridLayout_12.setObjectName("gridLayout_12")
         self.RenderSettingsFrame = QtWidgets.QFrame(self.tab_3)
-        self.RenderSettingsFrame.setGeometry(QtCore.QRect(10, 20, 1141, 671))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -218,6 +247,7 @@ class Ui_TranscriptEditor(QMainWindow):
         self.CrossfadeEnableButton = QtWidgets.QRadioButton(self.WindowingEnableFrame)
         self.CrossfadeEnableButton.setGeometry(QtCore.QRect(10, 50, 231, 19))
         self.CrossfadeEnableButton.setObjectName("CrossfadeEnableButton")
+        self.gridLayout_12.addWidget(self.RenderSettingsFrame, 0, 0, 1, 1)
         self.TabWidget.addTab(self.tab_3, "")
         self.tab2 = QtWidgets.QWidget()
         self.tab2.setObjectName("tab2")
@@ -286,7 +316,6 @@ class Ui_TranscriptEditor(QMainWindow):
         self.retranslateUi(TranscriptEditor)
         self.TabWidget.setCurrentIndex(0)
         self.OriginalChannelTabs.setCurrentIndex(0)
-        self.EditorChannelsTab.setCurrentIndex(0)
         self.RenderedChannelTabs.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(TranscriptEditor)
 
@@ -295,8 +324,19 @@ class Ui_TranscriptEditor(QMainWindow):
         TranscriptEditor.setWindowTitle(_translate("TranscriptEditor", "Dialog"))
         self.OriginalChannelTabs.setTabText(self.OriginalChannelTabs.indexOf(self.tab_2), _translate("TranscriptEditor", "Main Channel"))
         self.TabWidget.setTabText(self.TabWidget.indexOf(self.tab1), _translate("TranscriptEditor", "Original Transcription"))
+        self.ApplyShiftButton.setText(_translate("TranscriptEditor", "Apply Shift"))
         self.RenderButton.setText(_translate("TranscriptEditor", "Render"))
-        self.EditorChannelsTab.setTabText(self.EditorChannelsTab.indexOf(self.tab_8), _translate("TranscriptEditor", "Channel 1"))
+        self.DescriptionBox.setHtml(_translate("TranscriptEditor", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8pt; font-weight:400; font-style:normal;\">\n"
+"<p align=\"right\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">Speaker number selection:</span></p>\n"
+"<p align=\"right\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">Word selection starting index:</span></p>\n"
+"<p align=\"right\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">Word selection ending index:</span></p>\n"
+"<p align=\"right\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">Word segment shift amount (seconds):</span></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">Format of transcript:</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Speaker #&lt;channel number&gt;: [ &lt;first word index&gt;, &lt;timestamp of first word&gt;]   word, next word, next next word, ... [ &lt;last word index&gt;, &lt;timestamp of last word&gt;]</p></body></html>"))
         self.TabWidget.setTabText(self.TabWidget.indexOf(self.tab), _translate("TranscriptEditor", "Transcript Editor"))
         self.PauseShorteningText.setHtml(_translate("TranscriptEditor", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
@@ -328,12 +368,12 @@ class Ui_TranscriptEditor(QMainWindow):
     # Called after Render button
     # Need to add audio file things eventually maybe
     def doRender(self):
-        # read rendersettings to send as render parameter
-        rendersettings = self.readRenderSettings()
+        # read rendersettings to send as er parameter
+        rendersettings = self.readRenderSettings() 
 
         # order timestamps for rendering optimizatons
         for i in range(self.numchannels):
-            self.oldTranscripts[i].quicksort( (0, len(self.oldTranscripts[i].timestamps) - 1) )
+            self.oldTranscripts[i].quicksort( (0, self.oldTranscripts[i].wordCount - 1) )
 
         # setup to find overlap
         if(rendersettings.pauseShortenEnable):
@@ -342,6 +382,7 @@ class Ui_TranscriptEditor(QMainWindow):
             self.oldTranscripts[0].findOverlappingPauses(self.oldTranscripts, rendersettings)
 
         render = self.oldTranscripts[self.numchannels - 1].RenderTranscription(self.oldTranscripts[self.numchannels - 1], rendersettings)
+
         for i in range(self.numchannels - 1):
             newrender = self.oldTranscripts[i].RenderTranscription(self.oldTranscripts[i], rendersettings)
             # pad to length w/Stereo/Mono checks
@@ -367,17 +408,14 @@ class Ui_TranscriptEditor(QMainWindow):
             f, t, spec = signal.spectrogram(ins.transpose(), self.oldTranscripts[0].sr)
         else:
             f, t, spec = signal.spectrogram(render, self.oldTranscripts[0].sr)
-        
-
-        #spec = stft(input_sound=render, dft_size=256, hop_size=64, zero_pad=256, window=signal.hann(256))
-        #t,f = FormatAxis(spec, self.oldTranscripts[0].sr, len(render)/self.oldTranscripts[0].sr)
+    
         self.plotNewSpec(spec, t, f)
-
-        
         
         maintrans = Transcript()
         maintrans.MainFromOthers(self.oldTranscripts)
         self.setNewTranscriptText(maintrans)
+
+        self.blockSetAsOriginal = False
 
         sound(render, self.oldTranscripts[0].sr, 'Rendered Sound')
 
@@ -396,43 +434,67 @@ class Ui_TranscriptEditor(QMainWindow):
     # function for when Apply Shift button is pressed in the transcript editor
     def doApplyShift(self):        
         #get active/visible editor tab
-        activeIdx = self.EditorChannelsTab.currentIndex()
-        activeWidget =  self.editorChannelArray[activeIdx]
+        activeIdx = self.ChannelSelectBox.value() - 1
+        #activeWidget =  self.editorChannelArray[activeIdx]
         activeTranscript = self.oldTranscripts[activeIdx]
 
-        # do nothing check
-        if(activeWidget.WordShiftAmount.value() == 0 and activeWidget.WordSelectEnd.value() == 0):
-            return 
+        # get select ranges, clip values to 0 and wordCount-1
+        selectstart = max(self.WordSelectStart.value()-1, 0)
+        selectend = min(self.WordSelectEnd.value()-1, activeTranscript.wordCount -1) 
+        shiftamt = self.WordShiftAmount.value()
 
-        # get select idx, -1 to convert to 0 index
-        selectstart = max(activeWidget.WordSelectStart.value()-1, 0)
+        # do nothing checks
+        if(selectstart > selectend):
+            return
         
-        selectend = min(activeWidget.WordSelectEnd.value()-1, activeTranscript.wordCount -1) 
-        if(selectend == -1):
-            selectend = activeTranscript.wordCount -1
-        shiftamt = activeWidget.WordShiftAmount.value()
-
-        # quick check to make sure we cant shift into negative times, if this happends then move 
-        # earliest word to 0.00
+        # quick check to make sure we cant shift into negative times, if this happends then change timeshift to move all things to 0
         if(activeTranscript.timestamps[selectstart][0] + shiftamt < 0):
             shiftamt = -activeTranscript.timestamps[selectstart][0]
 
         # apply shift to timestamps and keep track of shifts in shift array
         i = selectstart
-        end = min(activeTranscript.audiolength, selectend)
-        while i <= end:
+        while i <= selectend:
             tup = activeTranscript.timestamps[i]
-            tup = (tup[0] + shiftamt, tup[1] + shiftamt)
-            activeTranscript.timestamps[i] = tup
+            activeTranscript.timestamps[i] = (tup[0] + shiftamt, tup[1] + shiftamt)
             activeTranscript.shifts[i] += shiftamt
             i += 1
-        
-        activeWidget.WordSelectEnd.setValue(0)
-        activeWidget.WordSelectStart.setValue(0)
-        activeWidget.WordShiftAmount.setValue(0.00)
+        self.unsortedTranscripts = True
 
+        # resort orders and visibly update transcript editor
+        self.updateTranscriptEditorText()
+                 
         print('shift applied')
         
+        self.WordSelectEnd.setValue(0)
+        self.WordSelectStart.setValue(0)
+        self.WordShiftAmount.setValue(0.00)
+
+    
+    def updateTranscriptEditorText(self):
+        if(self.unsortedTranscripts):
+            print('before sort')
+            for i in range(self.numchannels):
+                self.oldTranscripts[i].quicksort( (0, self.oldTranscripts[i].wordCount - 1) )
+        print('before init')  
+        self.initTranscriptEditor(self.oldTranscripts, self.numchannels)
+
+        
+    def doSetAsOriginal(self):
+        # delete tabs to be replaced
+        # remove all but main channels
+        if(self.blockSetAsOriginal):
+            return 
+
+        for i in range(self.numchannels):
+            self.OriginalChannelTabs.removeTab(1)
+        
+        # set oldtranscript audio to newrenders
+        for i in range(self.numchannels):
+            self.oldTranscripts[i].setAudioAsRender()
+
+
+        self.launchInit(self.oldTranscripts, self.numchannels)
+        self.blockSetAsOriginal = False
 
     def plotNewSpec(self, spec, t, f):
 
@@ -450,12 +512,20 @@ class Ui_TranscriptEditor(QMainWindow):
     # 0 = main, 1-any = channel # 
     def plotOldSpec(self, transcripts, channel):
         if(channel == 0):
-            l = QtWidgets.QVBoxLayout(self.oldspec_plot)
-            if(l.count() > 0):
-                l.removeWidget(self.oldSpecWidget)
-
-            m = MplCanvas(self.oldspec_plot, width=5, height=4)
+            if(self.Mainl == None):
+                # init mpl
+                self.Mainl = QtWidgets.QVBoxLayout(self.oldspec_plot)
             
+                if(self.Mainl.count() > 0):
+                    self.Mainl.removeWidget(self.oldSpecWidget)
+
+                self.Mainm = MplCanvas(self.oldspec_plot, width=5, height=4)
+
+                self.oldSpecWidget = self.Mainm
+                self.Mainl.addWidget(self.Mainm)
+                self.show()
+            
+            # plot main channel
             # mono/stero handle
             if(self.oldTranscripts[self.numchannels-1].isStereo):
                 render = self.oldTranscripts[self.numchannels-1].audio.sum(axis=1) / 2
@@ -475,10 +545,7 @@ class Ui_TranscriptEditor(QMainWindow):
 
             f, t, spec = signal.spectrogram(render, self.oldTranscripts[0].sr)
 
-            m.plotSpec(spec, t, f)
-            self.oldSpecWidget = m
-            l.addWidget(m)
-            self.show()
+            self.Mainm.plotSpec(spec, t, f)
 
         if(channel > 0):
             frame = self.oldChannelArray[channel-1]
@@ -498,15 +565,7 @@ class Ui_TranscriptEditor(QMainWindow):
     #param: words - transcript.words array
     def setOldTranscriptText(self, transcripts, numchannels):
         self.oldTranscripts = []
-        # fills in main, This needs to be redone to include all transcripts
-        transcript = Transcript()
-        transcript.MainFromOthers(transcripts)
-        text = ""
-        words = transcript.words
-        for i in range(len(words)):
-            text += words[i] + ' ' 
-        self.oldwords.setText(text)
-        self.oldTranscripts.append(transcripts[0])
+      
 
         # create new tabs and fill in
         if(numchannels >= 1):
@@ -540,57 +599,81 @@ class Ui_TranscriptEditor(QMainWindow):
 
                 newframe.oldwords.setText(text)
                 self.oldTranscripts.append(transcripts[i])
+
+        # fills in main, This needs to be redone to include all transcripts
+        transcript = Transcript()
+        transcript.MainFromOthers(transcripts)
+
+        text = self.compileTranscriptsTexts(self.oldTranscripts, self.numchannels)
+        self.oldwords.setText(text)
+        self.oldTranscripts.append(transcripts[0])
                 
         self.OriginalChannelTabs.setCurrentIndex(0)
-
+        self.ChannelSelectBox.setMinimum(1)
+        self.ChannelSelectBox
 
     ## happens only when original transcription is set and on first transcript
     def initTranscriptEditor(self, transcripts, numchannels):
-        self.editorChannelArray = []
+        # fill word box in chronological order of speaker words
 
-        for j in range(self.EditorChannelsTab.count()):
-            self.EditorChannelsTab.removeTab(j)
+        text = self.compileTranscriptsTexts(transcripts, numchannels)
 
-        for t in range(numchannels):
-            tabname = "Channel " + str(t+1)
-            newtab = QtWidgets.QWidget()
-            newframe = TranscriptEditorFrame(self.EditorChannelsTab)
-            newframe.setupUi(newframe)
+        self.TranscriptWordBox.setText(text)
+        self.ChannelSelectBox.setMinimum(1)
+        self.ChannelSelectBox.setMaximum(numchannels)
+        self.WordSelectStart.setMinimum(1)
+        self.WordSelectStart.setMaximum(999999)
+        self.WordSelectEnd.setMinimum(1)
+        self.WordSelectEnd.setMaximum(999999)
+        self.ApplyShiftButton.clicked.connect(self.doApplyShift)
 
-            gridlayout = QtWidgets.QGridLayout(newtab)
-            gridlayout.addWidget(newframe, 0, 0, 1, 1)
+    def compileTranscriptsTexts(self, transcripts, numchannels):
+        done = False
+        nextwords = [0] * numchannels # array to keep track of last seen words in each channel
+        lastChannel = -1
+        text = ""
+        while not(done):
+            # go through each channel, get next word, use next upcoming word
+            nextTimes = [0] * numchannels
+            for i in range(numchannels):
+                wordIdx = nextwords[i]
+                if(wordIdx > transcripts[i].wordCount-1):
+                    nextTimes[i] = 999999999999 # finished this array, sentinel value to never pass
+                else:
+                    nextTimes[i] = transcripts[i].timestamps[wordIdx][0] # only care about start times
 
-            self.EditorChannelsTab.addTab(newtab, tabname)
-            self.editorChannelArray.append(newframe)
+            minTimeIdx = nextTimes.index(min(nextTimes))
+            #minTimeIdx = channel with next upcoming spoken word
 
-            transcript = transcripts[t]
-            text = ""
-            words = transcript.words
-            times = transcript.timestamps
-            wordslength = len(words)
-            for i in range(len(words)):
-                if(i%10 == 0):
-                    # word segment and timestamp labeling
-                    if(i!=0):
-                        text+='\n'
-                    text += '[' + str(i+1) + ' - ' + str(min(i+10, wordslength)) + '] '
-                    text += '(' + str(times[i][0]) + ' - ' + str(times[min(i+9, wordslength-1)][1]) + '): '
-                text += words[i] + ' '
+            word = transcripts[minTimeIdx].words[nextwords[minTimeIdx]]
+            if(minTimeIdx == lastChannel):
+                # spoken word is by same person as last
+                text += " " + word
+            else:
+                # new speaker, add text for that
+                # first add timestamp and word idx to end of prev word
+                if(lastChannel != -1):
+                    text += "  [" + str(nextwords[lastChannel]) + ", " + str(transcripts[lastChannel].timestamps[nextwords[lastChannel] - 1][1]) + "]\n\n"
+                text += "Speaker #" + str(minTimeIdx + 1) + ": " + "[" + str(nextwords[minTimeIdx]+1) + ", " + str(transcripts[minTimeIdx].timestamps[nextwords[minTimeIdx]][0]) + "]  " 
+                text += " " + word
+            
+            lastChannel = minTimeIdx
+            nextwords[minTimeIdx] += 1
 
-            newframe.DescriptionBox.setText('Word select index start (0 = start of transcript): \nWord select index end (0 = end of transcript): \nWord shift amount (seconds):\n [word# start, Word# End] (section starttime, section endtime)')
-            newframe.TranscriptWordBox.setText(text)
+            # check if done
+            done = True 
+            for i in range(numchannels):
+                if(nextwords[i] < transcripts[i].wordCount):
+                    done = False
+                    i = numchannels - 1
 
-            # link apply shift button to our function
-            newframe.ApplyShiftButton.clicked.connect(self.doApplyShift)
+        text += "  [" + str(nextwords[lastChannel] - 1) + ", " + str(transcripts[lastChannel].timestamps[nextwords[lastChannel] - 1][1]) + "]"   
+        
+        return text
 
     def setNewTranscriptText(self, transcript):
         # TODO, Main channels should show all words of each channel
-        text = ""
-        words = transcript.words
-        times = transcript.timestamps
-        for i in range(len(words)):
-            text += words[i] + ' '  
-        
+        text = self.compileTranscriptsTexts(self.oldTranscripts, self.numchannels)
         self.newwords.setText(text)
 
 
@@ -605,8 +688,11 @@ class Ui_TranscriptEditor(QMainWindow):
         self.RenderButton.clicked.connect(self.doRender)
         self.newSpecLayer = QtWidgets.QVBoxLayout(self.newspec_plot) 
         #self.oldSpecLayer = QtWidgets.QVBoxLayout(self.oldspec_plot)
-
+        self.SetOriginalButton.clicked.connect(self.doSetAsOriginal)
         
+        self.unsortedTranscripts = False
+        self.blockSetAsOriginal = True
+        self.Mainl = None
         self.TabWidget.setFocus()
         self.setCentralWidget(self.TabWidget)
     
@@ -649,6 +735,8 @@ class MplCanvas(FigureCanvas):
         self.axes.set_xlabel('time (seconds)')
         self.axes.set_ylabel('Frequency (Hz)')
         self.draw()
+
+    
 
     ### just to test plot ####
     def plotexample(self):

@@ -69,12 +69,12 @@ class Transcript():
                 self.isMono = False
                 self.isStereo = True
                 self.audiolength = audio.shape[0]
-                self.audio[0][0] += self.audio[0][1] #test read-only
-                
+                self.audio[0][0] += self.audio[0][1] #test read-only                
                             
         except:
             self.audio = copy.deepcopy(audio) # deepcopy our own array if read-only        
             #print(self.audio)
+        self.lastRender = audio
         
     def copyother(self, transcript):
         self.words = copy.deepcopy(transcript.words)
@@ -338,9 +338,12 @@ class Transcript():
                     render[newstart_n:newend_n] += sliced
                     render[oldstart_n:oldend_n] = 0
                 # !!!!!!!!!BACKGROUND FILL GOES HERE!!!!!!!!!!
-                    
+        
+        self.lastRender = render.T
         return render
 
+    def setAudioAsRender(self):
+        self.audio = self.lastRender
 
     # calls Render Transcription for each channel
     # parameters are arrays where each index are parameters to individual render transcription calls
@@ -379,6 +382,7 @@ class Transcript():
     def _quick_sort(self, low, high):
         if low < high:
             # This is the index after the pivot, where our lists are split
+            
             split_index = self.partition(low, high)
             self._quick_sort(low, split_index)
             self._quick_sort(split_index + 1, high)
