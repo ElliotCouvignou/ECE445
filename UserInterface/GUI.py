@@ -369,17 +369,24 @@ class Ui_TranscriptEditor(QMainWindow):
     # Need to add audio file things eventually maybe
     def doRender(self):
         # read rendersettings to send as er parameter
+        print('Starting Rendering...')
         rendersettings = self.readRenderSettings() 
 
         # order timestamps for rendering optimizatons
         for i in range(self.numchannels):
             self.oldTranscripts[i].quicksort( (0, self.oldTranscripts[i].wordCount - 1) )
 
-        # setup to find overlap
-        if(rendersettings.pauseShortenEnable):
+        # prelim setup based on render settings
+        if(rendersettings.pauseShortenEnable or rendersettings.backgroundFillEnable):
             for i in range(self.numchannels):
                 self.oldTranscripts[i].findPauses()
-            self.oldTranscripts[0].findOverlappingPauses(self.oldTranscripts, rendersettings)
+
+            if(rendersettings.backgroundFillEnable):
+                for i in range(self.numchannels):
+                    self.oldTranscripts[i].sampleBackgroundNoise()
+
+            if(rendersettings.pauseShortenEnable):
+                self.oldTranscripts[0].findOverlappingPauses(self.oldTranscripts, rendersettings)
 
         render = self.oldTranscripts[self.numchannels - 1].RenderTranscription(self.oldTranscripts[self.numchannels - 1], rendersettings)
 
@@ -472,10 +479,8 @@ class Ui_TranscriptEditor(QMainWindow):
     
     def updateTranscriptEditorText(self):
         if(self.unsortedTranscripts):
-            print('before sort')
             for i in range(self.numchannels):
                 self.oldTranscripts[i].quicksort( (0, self.oldTranscripts[i].wordCount - 1) )
-        print('before init')  
         self.initTranscriptEditor(self.oldTranscripts, self.numchannels)
 
         
