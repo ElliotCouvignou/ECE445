@@ -124,7 +124,6 @@ class Transcript():
     def sampleBackgroundNoise(self):
         # Can only be done if we know pauses
         if(len(self.pauses) == 0):
-            print('nopauses')
             return
     
         # this is going to be 8 sec sample of background noise 
@@ -135,22 +134,29 @@ class Transcript():
             self.backgroundNoise = np.zeros(maxBGNlength)
 
         # sample background with pauses
+        offset = int(self.sr * 1.0) # sample pauses 0.2 secs after 'pause', reduces artifacts
         curidx = 0      
         for i in range(len(self.pauses)):
-            pause = (int(self.pauses[i][0]*self.sr), int(self.pauses[i][1]*self.sr))
-            sliced = self.audio[pause[0]:pause[1]]
-            l = len(sliced)
+            pause = (int(self.pauses[i][0]*self.sr) + offset, int(self.pauses[i][1]*self.sr) - offset)
 
-            if(curidx+l >= maxBGNlength):
-                l = maxBGNlength - curidx - 1
-            self.backgroundNoise[curidx:curidx+l] = sliced[:l]
-            curidx = curidx+l
-            
-            if(curidx+l >= maxBGNlength):
-                break
+            if(pause[0] < pause[1]):
+                if(self.isMono):
+                    sliced = self.audio[pause[0]:pause[1]]
+                else:
+                    print("thishape", self.audio.shape)
+                    sliced = self.audio[pause[0]:pause[1],:]
+                    
+                l = len(sliced)
+
+                if(curidx+l >= maxBGNlength):
+                    l = maxBGNlength - curidx - 1
+                self.backgroundNoise[curidx:curidx+l] = sliced[:l]
+                curidx = curidx+l
+
+                if(curidx+l >= maxBGNlength):
+                    break
 
         self.enableBackgroundNoiseFill = True
-        print('Finish Sampling')
 
 
     # creates main channel type transcript from others. Basically combines them
@@ -264,7 +270,6 @@ class Transcript():
         render = render.transpose()
         renderlen = trans.audiolength
         time = trans.timestamps
-        print('dorender')
         
         # ATM doinglinear crossfade (75ms) via np.linspace
         delay_ms = round(.075 * trans.sr) # 75 ms for now. based on feel, FOR WINDOWING
@@ -370,8 +375,7 @@ class Transcript():
                 if(trans.isStereo):
                     render[:, newstart_n:newend_n] += sliced
                     
-                    if(self.enableBackgroundNoiseFill and RenderSettings.enableBackgroundNoiseFill):
-                        print('?')
+                    if(self.enableBackgroundNoiseFill and RenderSettings.backgroundFillEnable):
                         self.renderBackgroundNoiseFill(render[:, oldstart_n:oldend_n])                        
                     else:                        
                         render[:, oldstart_n:oldend_n] = 0
@@ -379,43 +383,48 @@ class Transcript():
                 else:
                     render[newstart_n:newend_n] += sliced
 
-                    if(self.enableBackgroundNoiseFill and RenderSettings.enableBackgroundNoiseFill):
-                        print('?')
+                    if(self.enableBackgroundNoiseFill and RenderSettings.backgroundFillEnable):
                         self.renderBackgroundNoiseFill(render[:, oldstart_n:oldend_n])                        
                     else:                        
                         render[:, oldstart_n:oldend_n] = 0
                 # !!!!!!!!!BACKGROUND FILL GOES HERE!!!!!!!!!!
-        
+
         self.lastRender = render.T
         return render
 
     def renderBackgroundNoiseFill(self, renderslice):
-        length = len(renderslice)
+        length = renderslice.shape[1]
         maxBGNlength = round(8*self.sr)
-        delay_ms = round(.075 * trans.sr) # 75 ms for now. based on feel, FOR WINDOWING
+        delay_ms = round(.075 * self.sr) # 75 ms for now. based on feel, FOR WINDOWING
 
         curlength = 0
-        print('Filling BGN')
         while(curlength < length):
             # sample 3.5 seconds of sampled background, repeat on different starting points
             lennoise = min(length - curlength, round(3.5*self.sr))
+            if(curlength != 0):
+                lennoise += delay_ms
+
             start = random.randint(0, maxBGNlength-1)
             end = (start + lennoise) % maxBGNlength
             if(end < start):
+                print(start, end, lennoise)
                 noise = self.backgroundNoise[start:] + self.backgroundNoise[:end]
             else:
                 noise = self.backgroundNoise[start:end]
+            noise = noise.T
             # window both ends of noise 
-            noise[:delay_ms] *= np.linspace(0.0, 1.0, delay_ms)
-            noise[-delay_ms:] *= np.linspace(1.0, 0.0, delay_ms)
+            if(self.isMono):
+                noise[:delay_ms] *= np.linspace(0.0, 1.0, min(lennoise, delay_ms))
+                noise[-delay_ms:] *= np.linspace(1.0, 0.0, min(lennoise, delay_ms))
+            else:
+                noise[:,:delay_ms] *= np.linspace(0.0, 1.0, min(lennoise, delay_ms))
+                noise[:,-delay_ms:] *= np.linspace(1.0, 0.0, min(lennoise, delay_ms))
 
             if(curlength != 0):
-                curlength -= delay_ms
+                curlength -= delay_ms # left shift by delay to overlap crossfades
             renderslice[curlength:curlength+lennoise] = noise
 
             curlength += lennoise
-        print('done Filling BGN')
-
         
     def setAudioAsRender(self):
         self.audio = self.lastRender
