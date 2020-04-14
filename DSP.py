@@ -21,6 +21,39 @@ def sound( x, rate=8000, label=''):
         ))
 
 
+# returns segments of active audio, segments delivered as tuples of indexes to slice
+def VAD_separate(audio, cutoff, sr):
+    # filter at cutoff
+    w = cutoff / (sr / 2)
+    b, a = signal.butter(2, w, 'lowpass')
+    newaudio = audio**2
+    
+    VAD = abs(signal.filtfilt(b, a, newaudio))
+    threshold = .00045
+    
+    # trim segments above threshold
+    segments = []
+    currentsegment = []
+    start = 0
+    end = 0
+    offset = int(0.2*sr)
+    for i in range(len(VAD)):
+        sample = VAD[i]
+        
+        if(sample > threshold):
+            # check if this is same as before 
+            if(i>0):
+                if(VAD[i-1]<threshold):
+                    start = i
+        else:
+            if(i>0):
+                if(VAD[i-1] > threshold):
+                    end = i
+                    segments.append((max(0,start-offset),min(end+offset, len(audio)-1)))
+                    
+    segments = np.asarray(segments)
+    return segments
+
 def stft( input_sound, dft_size, hop_size, zero_pad, window=1.0):
     length = len(input_sound)
     

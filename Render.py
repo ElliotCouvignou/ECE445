@@ -126,13 +126,15 @@ class Transcript():
         if(len(self.pauses) == 0):
             return
     
-        # this is going to be 8 sec sample of background noise 
-        maxBGNlength = round(8*self.sr)
+        print(self.pauses)
+        # this is going to be 20 sec sample of background noise 
+        maxBGNlength = round(20*self.sr)
         if(self.isStereo):
             self.backgroundNoise = np.zeros(2*maxBGNlength).reshape(maxBGNlength, 2)
         else:
             self.backgroundNoise = np.zeros(maxBGNlength)
 
+        
         # sample background with pauses
         offset = int(self.sr * 1.0) # sample pauses 0.2 secs after 'pause', reduces artifacts
         curidx = 0      
@@ -140,17 +142,18 @@ class Transcript():
             pause = (int(self.pauses[i][0]*self.sr) + offset, int(self.pauses[i][1]*self.sr) - offset)
 
             if(pause[0] < pause[1]):
+                print('use' , (pause[0]/self.sr, pause[1]/self.sr), pause[1]-pause[0], curidx, self.audio.shape)
                 if(self.isMono):
                     sliced = self.audio[pause[0]:pause[1]]
                 else:
-                    print("thishape", self.audio.shape)
                     sliced = self.audio[pause[0]:pause[1],:]
                     
+                
                 l = len(sliced)
 
                 if(curidx+l >= maxBGNlength):
                     l = maxBGNlength - curidx - 1
-                self.backgroundNoise[curidx:curidx+l] = sliced[:l]
+                self.backgroundNoise[curidx:curidx+l-1] = sliced[:l-1]
                 curidx = curidx+l
 
                 if(curidx+l >= maxBGNlength):
@@ -399,8 +402,8 @@ class Transcript():
 
         curlength = 0
         while(curlength < length):
-            # sample 3.5 seconds of sampled background, repeat on different starting points
-            lennoise = min(length - curlength, round(3.5*self.sr))
+            # sample 5.5 seconds of sampled background, repeat on different starting points
+            lennoise = min(length - curlength, round(5.5*self.sr))
             if(curlength != 0):
                 lennoise += delay_ms
 
