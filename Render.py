@@ -134,7 +134,6 @@ class Transcript():
         else:
             self.backgroundNoise = np.zeros(maxBGNlength)
 
-        
         # sample background with pauses
         offset = int(self.sr * 1.0) # sample pauses 0.2 secs after 'pause', reduces artifacts
         curidx = 0      
@@ -142,25 +141,29 @@ class Transcript():
             pause = (int(self.pauses[i][0]*self.sr) + offset, int(self.pauses[i][1]*self.sr) - offset)
 
             if(pause[0] < pause[1]):
-                print('use' , (pause[0]/self.sr, pause[1]/self.sr), pause[1]-pause[0], curidx, self.audio.shape)
+                print('use' , (pause[0]/self.sr, pause[1]/self.sr), pause[1]-pause[0], pause, curidx, self.audio.shape)
                 if(self.isMono):
                     sliced = self.audio[pause[0]:pause[1]]
                 else:
                     sliced = self.audio[pause[0]:pause[1],:]
                     
-                
                 l = len(sliced)
-
                 if(curidx+l >= maxBGNlength):
                     l = maxBGNlength - curidx - 1
-                self.backgroundNoise[curidx:curidx+l-1] = sliced[:l-1]
+
+                if(self.isMono):
+                    self.backgroundNoise[curidx:curidx+l-1] = sliced[:l-1]
+                else:
+                    self.backgroundNoise[curidx:curidx+l-1,:] = sliced[:l-1,:]
+
                 curidx = curidx+l
 
-                if(curidx+l >= maxBGNlength):
+                if(curidx >= maxBGNlength):
                     break
+        
+        self.backgroundNoise = self.backgroundNoise[:curidx]
 
         self.enableBackgroundNoiseFill = True
-
 
     # creates main channel type transcript from others. Basically combines them
     def MainFromOthers(self, transcripts):
@@ -268,28 +271,28 @@ class Transcript():
     # Transcript.words[i] = i-th word
     # Transcript.timestamps[i] = start/end times for i-th word
     #
-    def RenderTranscription(self, trans, RenderSettings):
-        render = np.asarray(trans.audio, dtype=np.float)
+    def RenderTranscription(self, RenderSettings):
+        render = np.asarray(self.audio, dtype=np.float)
         render = render.transpose()
-        renderlen = trans.audiolength
-        time = trans.timestamps
+        renderlen = self.audiolength
+        time = self.timestamps
         
         # ATM doinglinear crossfade (75ms) via np.linspace
-        delay_ms = round(.075 * trans.sr) # 75 ms for now. based on feel, FOR WINDOWING
+        delay_ms = round(.075 * self.sr) # 75 ms for now. based on feel, FOR WINDOWING
 
         # loop through each word, if shifts[i] !=0 then edit audio array to shift word slice
-        for i in range(len(trans.words)):
+        for i in range(len(self.words)):
             
-            if(trans.shifts[i] != 0.0 ):
+            if(self.shifts[i] != 0.0 ):
                 # get start/end times in samples for slicing
-                newstart_n = time2sample(time[i][0],trans.sr)
-                newend_n = time2sample(time[i][1],  trans.sr)  
-                oldstart_n = time2sample(time[i][0] - trans.shifts[i],trans.sr) # undo shift applied to timestamps
-                oldend_n = time2sample(time[i][1] - trans.shifts[i],trans.sr)  # undo shift applied to timestamps
+                newstart_n = time2sample(time[i][0],self.sr)
+                newend_n = time2sample(time[i][1],  self.sr)  
+                oldstart_n = time2sample(time[i][0] - self.shifts[i],self.sr) # undo shift applied to timestamps
+                oldend_n = time2sample(time[i][1] - self.shifts[i],self.sr)  # undo shift applied to timestamps
 
-                shift = trans.shifts[i]
-                sliced = trans.audio[oldstart_n:oldend_n]
-                if(trans.isStereo):
+                shift = self.shifts[i]
+                sliced = self.audio[oldstart_n:oldend_n]
+                if(self.isStereo):
                     sliced = sliced.transpose()
 
                 # extend/pad render length if necessary
@@ -297,7 +300,7 @@ class Transcript():
                     l = newend_n - renderlen
 
                     #mono/stereo pad cases
-                    if(trans.isStereo):
+                    if(self.isStereo):
                         pad = np.zeros(l*2).reshape(2,l)
                     else:
                         pad = np.zeros(l)
@@ -305,8 +308,8 @@ class Transcript():
                         render = pad
                     else:
                         # if windowing, window end piece
-                        if(RenderSettings.crossfadeEnable and renderlen == trans.audiolength):
-                            if(trans.isStereo):
+                        if(RenderSettings.crossfadeEnable and renderlen == self.audiolength):
+                            if(self.isStereo):
                                 render[:,-delay_ms:] *= np.linspace(1.0, 0.0, min(delay_ms, renderlen))
                             else:
                                 render[-delay_ms:] *= np.linspace(1.0, 0.0, min(delay_ms, renderlen))
@@ -328,17 +331,17 @@ class Transcript():
                 # if we are windowing then we need to crossfade before slice, after slice, and both sides of slice
                 if(RenderSettings.crossfadeEnable):
                     # windowing slcied audio first
-                    # this is complicated, if trans.shifts[i+1] == shifts[i] then these words are in the same segment
+                    # this is complicated, if self.shifts[i+1] == shifts[i] then these words are in the same segment
                     # if this is true we dont window their connections since they are still one piece
                     if(i > 0): #boundary control
                         #  check if left word is connected to right
-                        leftwordend_n = time2sample(trans.timestamps[i-1][1], trans.sr)
+                        leftwordend_n = time2sample(self.timestamps[i-1][1], self.sr)
                         
                         if(leftwordend_n != newstart_n):
                             # left index word isn't connected
                             # window left side of this audio and right side of audio before this word                            
                             #mono/stereo
-                            if(trans.isStereo):
+                            if(self.isStereo):
                                 #print(sliced.shape)
                                 sliced[0, :delay_ms] = (np.linspace(0.0,1.0 ,min(delay_ms, sliced.shape[1]))*sliced[0,:delay_ms]).astype(int)
                                 sliced[1, :delay_ms] = (np.linspace(0.0,1.0 ,min(delay_ms, sliced.shape[1]))*sliced[1,:delay_ms]).astype(int)
@@ -350,21 +353,21 @@ class Transcript():
                     else:
                         #unique case, if i = 0 and shift != 0, window left no matter what
                         #mono/stereo
-                        if(trans.isStereo):
+                        if(self.isStereo):
                             #print(sliced.shape)
                             sliced[0, :delay_ms] = (np.linspace(0.0,1.0 ,min(delay_ms, sliced.shape[1]))*sliced[0,:delay_ms]).astype(int)
                             sliced[1, :delay_ms] = (np.linspace(0.0,1.0 ,min(delay_ms, sliced.shape[1]))*sliced[1,:delay_ms]).astype(int)
                         else:
                             sliced[:delay_ms] = (np.linspace(0.0,1.0 ,min(delay_ms, len(sliced)))*sliced[:delay_ms]).astype(int)
 
-                    if(i < trans.wordCount-1):
-                        rightwordstart_n = time2sample(trans.timestamps[i+1][0], trans.sr)
+                    if(i < self.wordCount-1):
+                        rightwordstart_n = time2sample(self.timestamps[i+1][0], self.sr)
                         
                         if(rightwordstart_n != newend_n):
                             # right word isnt in same segment, window
                             #print('right', i, rightwordstart_n, newend_n)
                             #mono/stereo
-                            if(trans.isStereo):
+                            if(self.isStereo):
                                 #print(sliced.shape)
                                 sliced[0,:delay_ms] = (np.linspace(0.0,1.0 ,min(delay_ms, sliced.shape[1]))*sliced[0,:delay_ms]).astype(int)
                                 sliced[1,:delay_ms] = (np.linspace(0.0,1.0 ,min(delay_ms, sliced.shape[1]))*sliced[1,:delay_ms]).astype(int)
@@ -375,12 +378,12 @@ class Transcript():
                                 render[oldend_n:oldend_n+delay_ms] *= np.linspace(0.0, 1.0, delay_ms)
                 
                 # move sliced audio and zero pad empty space
-                if(trans.isStereo):
+                if(self.isStereo):
                     render[:, newstart_n:newend_n] += sliced
                     
                     if(self.enableBackgroundNoiseFill and RenderSettings.backgroundFillEnable):
                         self.renderBackgroundNoiseFill(render[:, oldstart_n:oldend_n])                        
-                    else:                        
+                    else:                       
                         render[:, oldstart_n:oldend_n] = 0
 
                 else:
@@ -390,14 +393,13 @@ class Transcript():
                         self.renderBackgroundNoiseFill(render[:, oldstart_n:oldend_n])                        
                     else:                        
                         render[:, oldstart_n:oldend_n] = 0
-                # !!!!!!!!!BACKGROUND FILL GOES HERE!!!!!!!!!!
 
         self.lastRender = render.T
         return render
 
     def renderBackgroundNoiseFill(self, renderslice):
         length = renderslice.shape[1]
-        maxBGNlength = round(8*self.sr)
+        maxBGNlength = self.backgroundNoise.shape[0]
         delay_ms = round(.075 * self.sr) # 75 ms for now. based on feel, FOR WINDOWING
 
         curlength = 0
@@ -411,7 +413,8 @@ class Transcript():
             end = (start + lennoise) % maxBGNlength
             if(end < start):
                 print(start, end, lennoise)
-                noise = self.backgroundNoise[start:] + self.backgroundNoise[:end]
+                noise = np.concatenate((self.backgroundNoise[start:], self.backgroundNoise[:end]), axis=0)
+                print(noise.shape)
             else:
                 noise = self.backgroundNoise[start:end]
             noise = noise.T

@@ -30,7 +30,7 @@ import copy
 from TranscriptPlotTab import TranscriptPlotFrame   
 from TranscriptEditorTab import TranscriptEditorFrame
 from Render import Transcript, RenderSettings
-from DSP import stft, FormatAxis, sound
+from DSP import stft, FormatAxis, sound, normalize
 
 
 class Ui_TranscriptEditor(QMainWindow):
@@ -383,10 +383,10 @@ class Ui_TranscriptEditor(QMainWindow):
 
             self.oldTranscripts[0].findOverlappingPauses(self.oldTranscripts, rendersettings)
 
-        render = self.oldTranscripts[self.numchannels - 1].RenderTranscription(self.oldTranscripts[self.numchannels - 1], rendersettings)
+        render = self.oldTranscripts[self.numchannels - 1].RenderTranscription(rendersettings)
 
         for i in range(self.numchannels - 1):
-            newrender = self.oldTranscripts[i].RenderTranscription(self.oldTranscripts[i], rendersettings)
+            newrender = self.oldTranscripts[i].RenderTranscription(rendersettings)
             # pad to length w/Stereo/Mono checks
             if(newrender.shape[1] > render.shape[1]):
                 if(render.shape[0] == 2):
@@ -710,7 +710,7 @@ class Ui_TranscriptEditor(QMainWindow):
         for i in range(self.numchannels):
             self.oldTranscripts[i].findPauses()
             self.oldTranscripts[i].sampleBackgroundNoise()
-            sound(self.oldTranscripts[i].backgroundNoise.T, self.oldTranscripts[i].sr, 'Background Speaker#'+str(i+1))
+            sound(normalize(self.oldTranscripts[i].backgroundNoise.T), self.oldTranscripts[i].sr, 'Background Speaker#'+str(i+1))
 
 
 
