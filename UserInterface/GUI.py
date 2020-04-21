@@ -497,7 +497,6 @@ class Ui_TranscriptEditor(QMainWindow):
         for ti in range(self.numchannels):
             t = self.oldTranscripts[ti]
             # find marker idx
-            print(t.wordCount)
             for i in range(t.wordCount-1):
                 times = t.timestamps[i]
                 # find newstart idx
@@ -542,10 +541,6 @@ class Ui_TranscriptEditor(QMainWindow):
                 if(oldmarks[ti]==0):
                     oldmarks[ti] = t.wordCount-1
 
-        print('oldmarks: ', oldmarks)
-        print('newmarks: ', newmarks)
-        print(N, newshiftamt)
-        print((oldstart_t, oldend_t), (newstart_t, newend_t))
         shiftamt = newshiftamt
         # apply shifts 
         for ti in range(self.numchannels):          

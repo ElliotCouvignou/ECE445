@@ -269,7 +269,6 @@ class Transcript():
         render = render.transpose()
         renderlen = trans.audiolength
         time = trans.timestamps
-        print('IN RENDER')
     
         # ATM doinglinear crossfade (75ms) via np.linspace
         delay_ms = round(.075 * trans.sr) # 75 ms for now. based on feel, FOR WINDOWING
