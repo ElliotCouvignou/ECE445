@@ -126,7 +126,6 @@ class Transcript():
         if(len(self.pauses) == 0):
             return
     
-        print(self.pauses)
         # this is going to be 20 sec sample of background noise 
         maxBGNlength = round(20*self.sr)
         if(self.isStereo):
@@ -141,7 +140,6 @@ class Transcript():
             pause = (int(self.pauses[i][0]*self.sr) + offset, int(self.pauses[i][1]*self.sr) - offset)
 
             if(pause[0] < pause[1]):
-                print('use' , (pause[0]/self.sr, pause[1]/self.sr), pause[1]-pause[0], pause, curidx, self.audio.shape)
                 if(self.isMono):
                     sliced = self.audio[pause[0]:pause[1]]
                 else:
@@ -412,9 +410,7 @@ class Transcript():
             start = random.randint(0, maxBGNlength-1)
             end = (start + lennoise) % maxBGNlength
             if(end < start):
-                print(start, end, lennoise)
                 noise = np.concatenate((self.backgroundNoise[start:], self.backgroundNoise[:end]), axis=0)
-                print(noise.shape)
             else:
                 noise = self.backgroundNoise[start:end]
             noise = noise.T
