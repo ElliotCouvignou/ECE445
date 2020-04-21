@@ -331,7 +331,7 @@ class Ui_TranscriptEditor(QMainWindow):
         self.gridLayout.addWidget(self.TabWidget, 0, 0, 1, 1)
 
         self.retranslateUi(TranscriptEditor)
-        self.TabWidget.setCurrentIndex(2)
+        self.TabWidget.setCurrentIndex(1)
         self.OriginalChannelTabs.setCurrentIndex(0)
         self.RenderedChannelTabs.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(TranscriptEditor)
