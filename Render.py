@@ -269,7 +269,7 @@ class Transcript():
         render = render.transpose()
         renderlen = trans.audiolength
         time = trans.timestamps
-        
+    
         # ATM doinglinear crossfade (75ms) via np.linspace
         delay_ms = round(.075 * trans.sr) # 75 ms for now. based on feel, FOR WINDOWING
 
@@ -285,6 +285,7 @@ class Transcript():
 
                 shift = trans.shifts[i]
                 sliced = trans.audio[oldstart_n:oldend_n]
+
                 if(trans.isStereo):
                     sliced = sliced.transpose()
 
@@ -373,10 +374,10 @@ class Transcript():
                 # move sliced audio and zero pad empty space
                 if(trans.isStereo):
                     render[:, newstart_n:newend_n] += sliced
-                    render[:, oldstart_n:oldend_n] = 0
+                    render[:, oldstart_n:oldend_n] -= sliced
                 else:
                     render[newstart_n:newend_n] += sliced
-                    render[oldstart_n:oldend_n] = 0
+                    render[oldstart_n:oldend_n] -= sliced
                 # !!!!!!!!!BACKGROUND FILL GOES HERE!!!!!!!!!!
         
         self.lastRender = render.T

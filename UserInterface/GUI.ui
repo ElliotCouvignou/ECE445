@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1018</width>
+    <width>857</width>
     <height>826</height>
    </rect>
   </property>
@@ -156,13 +156,6 @@
              <enum>QFrame::Raised</enum>
             </property>
             <layout class="QGridLayout" name="gridLayout_7">
-             <item row="0" column="1">
-              <widget class="QSpinBox" name="ChannelSelectBox">
-               <property name="maximum">
-                <number>0</number>
-               </property>
-              </widget>
-             </item>
              <item row="3" column="1">
               <widget class="QDoubleSpinBox" name="WordShiftAmount">
                <property name="sizePolicy">
@@ -176,13 +169,6 @@
                </property>
                <property name="maximum">
                 <double>9999999.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item row="4" column="1">
-              <widget class="QPushButton" name="ApplyShiftButton">
-               <property name="text">
-                <string>Apply Shift</string>
                </property>
               </widget>
              </item>
@@ -206,23 +192,7 @@
                </property>
               </widget>
              </item>
-             <item row="6" column="0" colspan="2">
-              <widget class="QTextBrowser" name="TranscriptWordBox">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="tabStopDistance">
-                <double>88.000000000000000</double>
-               </property>
-               <property name="placeholderText">
-                <string/>
-               </property>
-              </widget>
-             </item>
-             <item row="5" column="1">
+             <item row="7" column="1">
               <widget class="QPushButton" name="RenderButton">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -247,7 +217,44 @@
                </property>
               </widget>
              </item>
-             <item row="0" column="0" rowspan="6">
+             <item row="8" column="0" colspan="2">
+              <widget class="QTextBrowser" name="TranscriptWordBox">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="tabStopDistance">
+                <double>88.000000000000000</double>
+               </property>
+               <property name="placeholderText">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
+              <widget class="QRadioButton" name="DoOverlapButton">
+               <property name="text">
+                <string>Overlap Shifts</string>
+               </property>
+              </widget>
+             </item>
+             <item row="6" column="1">
+              <widget class="QPushButton" name="ApplyShiftButton">
+               <property name="text">
+                <string>Apply Shift</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QSpinBox" name="ChannelSelectBox">
+               <property name="maximum">
+                <number>0</number>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0" rowspan="8">
               <widget class="QTextBrowser" name="DescriptionBox">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
@@ -265,8 +272,18 @@ p, li { white-space: pre-wrap; }
 &lt;p align=&quot;right&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Word selection ending index:&lt;/p&gt;
 &lt;p align=&quot;right&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Word segment shift amount (seconds):&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- overlap shifts: non insert method&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- amount = time: start time of first word = amount, shift calculated from this &lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Format of transcript:&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Speaker #&amp;lt;channel number&amp;gt;: [ &amp;lt;first word index&amp;gt;, &amp;lt;timestamp of first word&amp;gt;]   word, next word, next next word, ... [ &amp;lt;last word index&amp;gt;, &amp;lt;timestamp of last word&amp;gt;]&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="1">
+              <widget class="QRadioButton" name="ShiftAsTimestampButton">
+               <property name="text">
+                <string>Amount = time</string>
                </property>
               </widget>
              </item>
