@@ -42,6 +42,7 @@ class RenderSettings():
         self.pauseOverlap = []
         self.backgroundFillEnable = False;
         self.crossfadeEnable = False;
+        self.profanityFilterEnable = False;
     
     def setPauseOverlap(self, new):
         self.pauseOverlap = new
