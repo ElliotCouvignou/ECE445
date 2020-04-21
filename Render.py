@@ -6,6 +6,7 @@ import numpy as np
 import copy as copy
 import DSP
 import random
+from pydub import AudioSegment
 from pydub.utils import mediainfo
 from os.path import join, dirname
 from ibm_watson import SpeechToTextV1
@@ -179,7 +180,45 @@ class Transcript():
         self.shifts = [(0.0, 0.0)] * self.audiolength
         self.quicksort( ( 0, self.audiolength-1) )    
         
+    def shortenPause(self, trans ,pauseOverlap, RenderSettings):
+        shorty = AudioSegment.empty()
+        i=0
+        iend = len(pauseOverlap)
+        mspause = RenderSettings.pauseShortenAmount * 1000
+        
+        fp1 = trans[0].audiofp
+        fp2 = trans[1].audiofp
+        s1 = AudioSegment.from_file(fp1,format='mp3')
+        s2 = AudioSegment.from_file(fp2,format='mp3')
+        tot = s1.overlay(s2)
+        
+        for i in range(iend-1):
+            msstart = 1000*pauseOverlap[i+1][0]
+            msend = 1000*pauseOverlap[i+1][1]
+            pmsstart = 1000*pauseOverlap[i][0]
+            pmsend = 1000*pauseOverlap[i][1]
 
+            if(i==0 and pmsstart != 0):
+                shorty += tot[:pmsstart]
+                print('Added Audio:0','-',pmsstart)
+            
+            if(pmsend - pmsstart > mspause):
+                shorty += tot[pmsstart:pmsstart+mspause]
+                print('Shortened Pause:',pmsstart,'-',pmsstart+mspause)
+                
+            elif(pmsend - pmsstart < mspause):
+                shorty += tot[pmsstart:pmsend]
+                print('Kept Pause:',pmsstart,'-',pmsend)
+            
+            shorty += tot[pmsend:msstart]
+            print('Added Audio:',pmsend,'-',msstart)
+                
+        shorty += tot[msend:]
+        print('Added Audio:',msend,'-','end')
+        
+        print('File Exported to PauseShortTest.mp3')
+        shorty.export('RawAudio/PauseShortTest.mp3',format='mp3')
+    
     # trans = transcript array to find overlapping pauses 
     def findPauses(self):
         # format of self.pauses is tuple ranges of pauses (like timestamps)
@@ -255,7 +294,8 @@ class Transcript():
             if(inInterval):
                 pauseOverlap.append(thisIntersection)       
         
-        print(pauseOverlap)
+        print('List of Overlapping Pause Ranges:',pauseOverlap)
+        self.shortenPause(trans, pauseOverlap, RenderSettings)
 
     # helper function for above
     def getIntersection(self, interval_1, interval_2):
@@ -508,6 +548,7 @@ class Transcript():
         a,sr=open_audio(audiofp)
         self.initAudio(a,sr)
         self.setupIBM(timestamps,confidence)
+        self.audiofp = audiofp
 
 
 
