@@ -30,7 +30,7 @@ import copy
 from TranscriptPlotTab import TranscriptPlotFrame   
 from TranscriptEditorTab import TranscriptEditorFrame
 from Render import Transcript, RenderSettings
-from DSP import stft, FormatAxis, sound
+from DSP import stft, FormatAxis, sound, normalize
 
 
 class Ui_TranscriptEditor(QMainWindow):
@@ -381,21 +381,23 @@ class Ui_TranscriptEditor(QMainWindow):
     # Need to add audio file things eventually maybe
     def doRender(self):
         # read rendersettings to send as er parameter
+        print('Starting Rendering...')
         rendersettings = self.readRenderSettings() 
 
         # order timestamps for rendering optimizatons
         for i in range(self.numchannels):
             self.oldTranscripts[i].quicksort( (0, self.oldTranscripts[i].wordCount - 1) )
 
-        # setup to find overlap
+        # prelim setup based on render settings
         if(rendersettings.pauseShortenEnable):
             for i in range(self.numchannels):
                 self.oldTranscripts[i].findPauses()
+
             self.oldTranscripts[0].findOverlappingPauses(self.oldTranscripts, rendersettings)
 
-        render = self.oldTranscripts[self.numchannels - 1].RenderTranscription(self.oldTranscripts[self.numchannels - 1], rendersettings)
+        render = self.oldTranscripts[self.numchannels - 1].RenderTranscription(rendersettings)
         for i in range(self.numchannels - 1):
-            newrender = self.oldTranscripts[i].RenderTranscription(self.oldTranscripts[i], rendersettings)
+            newrender = self.oldTranscripts[i].RenderTranscription(rendersettings)
             # pad to length w/Stereo/Mono checks
             if(newrender.shape[1] > render.shape[1]):
                 if(render.shape[0] == 2):
@@ -808,6 +810,13 @@ class Ui_TranscriptEditor(QMainWindow):
             self.plotOldSpec(transcripts, i)
 
         self.initTranscriptEditor(transcripts, numchannels)
+
+        # do prelim feature stuff, e.g. sample background noise
+        for i in range(self.numchannels):
+            self.oldTranscripts[i].findPauses()
+            self.oldTranscripts[i].sampleBackgroundNoise()
+            sound(normalize(self.oldTranscripts[i].backgroundNoise.T), self.oldTranscripts[i].sr, 'Background Speaker#'+str(i+1))
+
 
 
 ## matplotlib canvas widget class thing
