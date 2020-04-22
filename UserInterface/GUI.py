@@ -36,7 +36,7 @@ from DSP import stft, FormatAxis, sound, normalize
 class Ui_TranscriptEditor(QMainWindow):
     def setupUi(self, TranscriptEditor):
         TranscriptEditor.setObjectName("TranscriptEditor")
-        TranscriptEditor.resize(605, 826)
+        TranscriptEditor.resize(1285, 853)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -129,42 +129,6 @@ class Ui_TranscriptEditor(QMainWindow):
         self.EditTransFrame.setObjectName("EditTransFrame")
         self.gridLayout_7 = QtWidgets.QGridLayout(self.EditTransFrame)
         self.gridLayout_7.setObjectName("gridLayout_7")
-        self.WordShiftAmount = QtWidgets.QDoubleSpinBox(self.EditTransFrame)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.WordShiftAmount.sizePolicy().hasHeightForWidth())
-        self.WordShiftAmount.setSizePolicy(sizePolicy)
-        self.WordShiftAmount.setMinimum(-9999999.0)
-        self.WordShiftAmount.setMaximum(9999999.0)
-        self.WordShiftAmount.setObjectName("WordShiftAmount")
-        self.gridLayout_7.addWidget(self.WordShiftAmount, 3, 1, 1, 1)
-        self.WordSelectStart = QtWidgets.QSpinBox(self.EditTransFrame)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.WordSelectStart.sizePolicy().hasHeightForWidth())
-        self.WordSelectStart.setSizePolicy(sizePolicy)
-        self.WordSelectStart.setObjectName("WordSelectStart")
-        self.gridLayout_7.addWidget(self.WordSelectStart, 1, 1, 1, 1)
-        self.WordSelectEnd = QtWidgets.QSpinBox(self.EditTransFrame)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.WordSelectEnd.sizePolicy().hasHeightForWidth())
-        self.WordSelectEnd.setSizePolicy(sizePolicy)
-        self.WordSelectEnd.setObjectName("WordSelectEnd")
-        self.gridLayout_7.addWidget(self.WordSelectEnd, 2, 1, 1, 1)
-        self.RenderButton = QtWidgets.QPushButton(self.EditTransFrame)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.RenderButton.sizePolicy().hasHeightForWidth())
-        self.RenderButton.setSizePolicy(sizePolicy)
-        self.RenderButton.setMaximumSize(QtCore.QSize(16777215, 16777215))
-        self.RenderButton.setIconSize(QtCore.QSize(18, 18))
-        self.RenderButton.setObjectName("RenderButton")
-        self.gridLayout_7.addWidget(self.RenderButton, 7, 1, 1, 1)
         self.TranscriptWordBox = QtWidgets.QTextBrowser(self.EditTransFrame)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
@@ -175,9 +139,38 @@ class Ui_TranscriptEditor(QMainWindow):
         self.TranscriptWordBox.setPlaceholderText("")
         self.TranscriptWordBox.setObjectName("TranscriptWordBox")
         self.gridLayout_7.addWidget(self.TranscriptWordBox, 8, 0, 1, 2)
-        self.DoOverlapButton = QtWidgets.QRadioButton(self.EditTransFrame)
+        self.ShiftAsTimestampButton = QtWidgets.QCheckBox(self.EditTransFrame)
+        self.ShiftAsTimestampButton.setObjectName("ShiftAsTimestampButton")
+        self.gridLayout_7.addWidget(self.ShiftAsTimestampButton, 5, 1, 1, 1)
+        self.DoOverlapButton = QtWidgets.QCheckBox(self.EditTransFrame)
         self.DoOverlapButton.setObjectName("DoOverlapButton")
         self.gridLayout_7.addWidget(self.DoOverlapButton, 4, 1, 1, 1)
+        self.WordSelectStart = QtWidgets.QSpinBox(self.EditTransFrame)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.WordSelectStart.sizePolicy().hasHeightForWidth())
+        self.WordSelectStart.setSizePolicy(sizePolicy)
+        self.WordSelectStart.setObjectName("WordSelectStart")
+        self.gridLayout_7.addWidget(self.WordSelectStart, 1, 1, 1, 1)
+        self.WordShiftAmount = QtWidgets.QDoubleSpinBox(self.EditTransFrame)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.WordShiftAmount.sizePolicy().hasHeightForWidth())
+        self.WordShiftAmount.setSizePolicy(sizePolicy)
+        self.WordShiftAmount.setMinimum(-9999999.0)
+        self.WordShiftAmount.setMaximum(9999999.0)
+        self.WordShiftAmount.setObjectName("WordShiftAmount")
+        self.gridLayout_7.addWidget(self.WordShiftAmount, 3, 1, 1, 1)
+        self.WordSelectEnd = QtWidgets.QSpinBox(self.EditTransFrame)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.WordSelectEnd.sizePolicy().hasHeightForWidth())
+        self.WordSelectEnd.setSizePolicy(sizePolicy)
+        self.WordSelectEnd.setObjectName("WordSelectEnd")
+        self.gridLayout_7.addWidget(self.WordSelectEnd, 2, 1, 1, 1)
         self.ApplyShiftButton = QtWidgets.QPushButton(self.EditTransFrame)
         self.ApplyShiftButton.setObjectName("ApplyShiftButton")
         self.gridLayout_7.addWidget(self.ApplyShiftButton, 6, 1, 1, 1)
@@ -193,9 +186,16 @@ class Ui_TranscriptEditor(QMainWindow):
         self.DescriptionBox.setSizePolicy(sizePolicy)
         self.DescriptionBox.setObjectName("DescriptionBox")
         self.gridLayout_7.addWidget(self.DescriptionBox, 0, 0, 8, 1)
-        self.ShiftAsTimestampButton = QtWidgets.QRadioButton(self.EditTransFrame)
-        self.ShiftAsTimestampButton.setObjectName("ShiftAsTimestampButton")
-        self.gridLayout_7.addWidget(self.ShiftAsTimestampButton, 5, 1, 1, 1)
+        self.RenderButton = QtWidgets.QPushButton(self.EditTransFrame)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.RenderButton.sizePolicy().hasHeightForWidth())
+        self.RenderButton.setSizePolicy(sizePolicy)
+        self.RenderButton.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        self.RenderButton.setIconSize(QtCore.QSize(18, 18))
+        self.RenderButton.setObjectName("RenderButton")
+        self.gridLayout_7.addWidget(self.RenderButton, 7, 1, 1, 1)
         self.gridLayout_9.addWidget(self.EditTransFrame, 0, 0, 1, 1)
         self.gridLayout_6.addWidget(self.frame_2, 1, 0, 1, 1)
         self.TabWidget.addTab(self.tab, "")
@@ -341,7 +341,7 @@ class Ui_TranscriptEditor(QMainWindow):
         TranscriptEditor.setWindowTitle(_translate("TranscriptEditor", "Dialog"))
         self.OriginalChannelTabs.setTabText(self.OriginalChannelTabs.indexOf(self.tab_2), _translate("TranscriptEditor", "Main Channel"))
         self.TabWidget.setTabText(self.TabWidget.indexOf(self.tab1), _translate("TranscriptEditor", "Original Transcription"))
-        self.RenderButton.setText(_translate("TranscriptEditor", "Render"))
+        self.ShiftAsTimestampButton.setText(_translate("TranscriptEditor", "Amount = time"))
         self.DoOverlapButton.setText(_translate("TranscriptEditor", "Overlap Shifts"))
         self.ApplyShiftButton.setText(_translate("TranscriptEditor", "Apply Shift"))
         self.DescriptionBox.setHtml(_translate("TranscriptEditor", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
@@ -358,7 +358,7 @@ class Ui_TranscriptEditor(QMainWindow):
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Format of transcript:</p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Speaker #&lt;channel number&gt;: [ &lt;first word index&gt;, &lt;timestamp of first word&gt;]   word, next word, next next word, ... [ &lt;last word index&gt;, &lt;timestamp of last word&gt;]</p></body></html>"))
-        self.ShiftAsTimestampButton.setText(_translate("TranscriptEditor", "Amount = time"))
+        self.RenderButton.setText(_translate("TranscriptEditor", "Render"))
         self.TabWidget.setTabText(self.TabWidget.indexOf(self.tab), _translate("TranscriptEditor", "Transcript Editor"))
         self.PauseShorteningText.setHtml(_translate("TranscriptEditor", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
@@ -512,8 +512,8 @@ class Ui_TranscriptEditor(QMainWindow):
             
         newshiftamt = shiftamt
         # loop through each transcript, find newstart index and do shifts
-        newmarks = [0] * self.numchannels
-        oldmarks = [0] * self.numchannels
+        newmarks = [-1] * self.numchannels
+        oldmarks = [-1] * self.numchannels
         for ti in range(self.numchannels):
             t = self.oldTranscripts[ti]
             # find marker idx
@@ -522,13 +522,11 @@ class Ui_TranscriptEditor(QMainWindow):
                 # find newstart idx
                 # test clipping
                 if(times[0] <= newstart_t and times[1] >= newstart_t):
-                    newmarks[ti] = i
                     if(shiftamt > 0):
                         newshiftamt = min(newshiftamt, + shiftamt + (times[1] - newstart_t))
                     else:
                         newshiftamt = max(newshiftamt, shiftamt + (times[1] - newstart_t))
-                elif(times[1] <= newstart_t and t.timestamps[i+1][0] >= newstart_t):
-                    newmarks[ti] = i
+
                 #find markers based on shift
                 if(shiftamt > 0):
                     # find oldend
@@ -553,13 +551,22 @@ class Ui_TranscriptEditor(QMainWindow):
                         newmarks[ti] = i
                     elif(times[1] <= newstart_t and t.timestamps[i+1][1] >= newstart_t):
                         newmarks[ti] = i + 1
+
             # check for edges
             if(shiftamt>0):
-                if(newmarks[ti]==0):
+                if(newmarks[ti]==-1):
                     newmarks[ti] = t.wordCount-1
+                if(oldmarks[ti]==-1):
+                    oldmarks[ti] = 0
             else:
-                if(oldmarks[ti]==0):
-                    oldmarks[ti] = t.wordCount-1
+                if(newmarks[ti] == -1):
+                    newmarks[ti] = 0
+                if(oldmarks[ti]==-1):
+                    oldmarks[ti] = t.wordCount-1 
+
+        #print('shiftamt: ', shiftamt)
+        #print('oldmarks: ', oldmarks)
+        #print('newmarks: ', newmarks)
 
         shiftamt = newshiftamt
         # apply shifts 
@@ -577,7 +584,8 @@ class Ui_TranscriptEditor(QMainWindow):
 
         # apply shift to selected region
         for i in range(selectstart, selectend+1):
-            tup = aTrans.timestamps[i]
+            tup = self.oldTranscripts[activeIdx].timestamps[i]
+            #print(self.oldTranscripts[activeIdx].words[i])
             self.oldTranscripts[activeIdx].timestamps[i] = (tup[0] + shiftamt, tup[1] + shiftamt)
             self.oldTranscripts[activeIdx].shifts[i] += shiftamt
 
@@ -790,7 +798,7 @@ class Ui_TranscriptEditor(QMainWindow):
                     done = False
                     i = numchannels - 1
 
-        text += "  [" + str(nextwords[lastChannel] - 1) + ", " + str(round(transcripts[lastChannel].timestamps[nextwords[lastChannel] - 1][1], 2)) + "]"   
+        text += "  [" + str(nextwords[lastChannel]) + ", " + str(round(transcripts[lastChannel].timestamps[nextwords[lastChannel] - 1][1], 2)) + "]"   
         
         return text
 
