@@ -324,6 +324,7 @@ class Transcript():
             
             if(self.shifts[i] != 0.0 ):
                 # get start/end times in samples for slicing
+                
                 newstart_n = time2sample(time[i][0],self.sr)
                 newend_n = time2sample(time[i][1],  self.sr)  
                 oldstart_n = time2sample(time[i][0] - self.shifts[i],self.sr) # undo shift applied to timestamps
@@ -331,6 +332,7 @@ class Transcript():
 
                 shift = self.shifts[i]
                 sliced = self.audio[oldstart_n:oldend_n]
+                
                 if(self.isStereo):
                     sliced = sliced.transpose()
 
@@ -423,7 +425,7 @@ class Transcript():
                     if(self.enableBackgroundNoiseFill and RenderSettings.backgroundFillEnable):
                         self.renderBackgroundNoiseFill(render[:, oldstart_n:oldend_n])                        
                     else:                       
-                        render[:, oldstart_n:oldend_n] = 0
+                        render[:, oldstart_n:oldend_n] -= sliced
 
                 else:
                     render[newstart_n:newend_n] += sliced
@@ -431,9 +433,10 @@ class Transcript():
                     if(self.enableBackgroundNoiseFill and RenderSettings.backgroundFillEnable):
                         self.renderBackgroundNoiseFill(render[:, oldstart_n:oldend_n])                        
                     else:                        
-                        render[:, oldstart_n:oldend_n] = 0
+                        render[:, oldstart_n:oldend_n] -= sliced
 
         self.lastRender = render.T
+
         return render
 
     def renderBackgroundNoiseFill(self, renderslice):

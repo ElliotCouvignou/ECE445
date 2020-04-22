@@ -543,9 +543,9 @@ class Ui_TranscriptEditor(QMainWindow):
                 else:
                     # find oldstart
                     if(times[1] <= oldstart_t and t.timestamps[i+1][0] >= oldstart_t):
-                        oldmarks[ti] = i + 1
+                        oldmarks[ti] = i 
                     elif(times[0] <= oldstart_t and times[1] >= oldstart_t):
-                        oldmarks[ti] = i
+                        oldmarks[ti] = i - 1
                     # test clipping
                     if(times[0] <= newstart_t and times[1] >= newstart_t):
                         newmarks[ti] = i
@@ -572,16 +572,16 @@ class Ui_TranscriptEditor(QMainWindow):
         # apply shifts 
         for ti in range(self.numchannels):          
             if(shiftamt > 0):
-                for i in range(oldmarks[ti], newmarks[ti]):
+                for i in range(oldmarks[ti], newmarks[ti]+1):
                     tup = self.oldTranscripts[ti].timestamps[i]
                     self.oldTranscripts[ti].timestamps[i] = (tup[0] - N, tup[1] - N)
                     self.oldTranscripts[ti].shifts[i] -= N
             else:
-                for i in range(newmarks[ti], oldmarks[ti]):
+                for i in range(newmarks[ti], oldmarks[ti]+1):
                     tup = self.oldTranscripts[ti].timestamps[i]
                     self.oldTranscripts[ti].timestamps[i] = (tup[0] + N, tup[1] + N)
                     self.oldTranscripts[ti].shifts[i] += N
-
+            
         # apply shift to selected region
         for i in range(selectstart, selectend+1):
             tup = self.oldTranscripts[activeIdx].timestamps[i]
@@ -841,7 +841,7 @@ class Ui_TranscriptEditor(QMainWindow):
         for i in range(self.numchannels):
             self.oldTranscripts[i].findPauses()
             self.oldTranscripts[i].sampleBackgroundNoise()
-            sound(normalize(self.oldTranscripts[i].backgroundNoise.T), self.oldTranscripts[i].sr, 'Background Speaker#'+str(i+1))
+            #sound(normalize(self.oldTranscripts[i].backgroundNoise.T), self.oldTranscripts[i].sr, 'Background Speaker#'+str(i+1))
 
 
 
