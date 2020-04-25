@@ -7,6 +7,7 @@ import copy as copy
 import DSP
 import random
 from pydub import AudioSegment
+from DSP import sound
 from pydub.utils import mediainfo
 from os.path import join, dirname
 from ibm_watson import SpeechToTextV1
@@ -181,6 +182,45 @@ class Transcript():
         self.shifts = [(0.0, 0.0)] * self.audiolength
         self.quicksort( ( 0, self.audiolength-1) )    
         
+    def profanityFilter(self, trans, Renderettings):
+        cens = 'RawAudio/timcensor.mp3'
+        emp = AudioSegment.empty()
+        fp1 = trans[0].audiofp
+        fp2 = trans[1].audiofp
+        s1 = AudioSegment.from_file(fp1,format='mp3')
+        s2 = AudioSegment.from_file(fp2,format='mp3')
+        prof = s1.overlay(s2)
+        bleep = AudioSegment.from_file(cens,format='mp3')
+        badlist = []
+        
+        self.MainFromOthers(trans)
+        lng = len(self.words)
+        for i in range (lng):
+            if (self.words[i] == '****'):
+                badlist.append(self.timestamps[i])
+
+        fstart = (badlist[0][0]*1000)
+        fl = (badlist[0][1] - badlist[0][0])*1000
+        emp += prof[:fstart]
+        emp += bleep[:fl]
+
+        blng = len(badlist)
+        for i in range(blng-1):
+            start = (badlist[i][1]*1000)
+            end = (badlist[i+1][0]*1000)
+            ended = (badlist[i+1][1]*1000)
+    
+            emp += prof[start:end]
+            l = (badlist[i+1][1] - badlist[i+1][0])*1000
+            if(l>500): l=500
+            emp += bleep[:l]
+    
+        emp += prof[ended:]
+        emp.export('RawAudio/cleantest.mp3',format='mp3')
+        a,sr = open_audio('RawAudio/cleantest.mp3')
+        self.initAudio(a,sr)
+
+
     def shortenPause(self, trans ,pauseOverlap, RenderSettings):
         shorty = AudioSegment.empty()
         i=0
@@ -201,24 +241,26 @@ class Transcript():
 
             if(i==0 and pmsstart != 0):
                 shorty += tot[:pmsstart]
-                print('Added Audio:0','-',pmsstart)
+                #print('Added Audio:0','-',pmsstart)
             
             if(pmsend - pmsstart > mspause):
                 shorty += tot[pmsstart:pmsstart+mspause]
-                print('Shortened Pause:',pmsstart,'-',pmsstart+mspause)
+                #print('Shortened Pause:',pmsstart,'-',pmsstart+mspause)
                 
             elif(pmsend - pmsstart < mspause):
                 shorty += tot[pmsstart:pmsend]
-                print('Kept Pause:',pmsstart,'-',pmsend)
+                #print('Kept Pause:',pmsstart,'-',pmsend)
             
             shorty += tot[pmsend:msstart]
-            print('Added Audio:',pmsend,'-',msstart)
+            #print('Added Audio:',pmsend,'-',msstart)
                 
         shorty += tot[msend:]
-        print('Added Audio:',msend,'-','end')
+        #print('Added Audio:',msend,'-','end')
         
-        print('File Exported to PauseShortTest.mp3')
-        shorty.export('RawAudio/PauseShortTest.mp3',format='mp3')
+        shorty.export('RawAudio/PauseShort.mp3',format='mp3')
+        a,sr = open_audio('RawAudio/PauseShort.mp3')
+        self.initAudio(a,sr)
+    
     
     # trans = transcript array to find overlapping pauses 
     def findPauses(self):
@@ -293,9 +335,8 @@ class Transcript():
                     #    inInterval = False
                     #    c = len(trans[c].pauses)
             if(inInterval):
-                pauseOverlap.append(thisIntersection)       
-        
-        print('List of Overlapping Pause Ranges:',pauseOverlap)
+                pauseOverlap.append(thisIntersection)
+        print('Pauses:', pauseOverlap)
         self.shortenPause(trans, pauseOverlap, RenderSettings)
 
     # helper function for above

@@ -405,12 +405,18 @@ class Ui_TranscriptEditor(QMainWindow):
         for i in range(self.numchannels):
             self.oldTranscripts[i].quicksort( (0, self.oldTranscripts[i].wordCount - 1) )
 
+        
+        if(rendersettings.profanityFilterEnable):
+            self.oldTranscripts[0].profanityFilter(self.oldTranscripts, rendersettings)
+            self.oldTranscripts[1].profanityFilter(self.oldTranscripts, rendersettings)
+        
         # prelim setup based on render settings
         if(rendersettings.pauseShortenEnable):
             for i in range(self.numchannels):
                 self.oldTranscripts[i].findPauses()
 
             self.oldTranscripts[0].findOverlappingPauses(self.oldTranscripts, rendersettings)
+            self.oldTranscripts[1].findOverlappingPauses(self.oldTranscripts, rendersettings)
 
         render = self.oldTranscripts[self.numchannels - 1].RenderTranscription(rendersettings)
         for i in range(self.numchannels - 1):
@@ -809,10 +815,10 @@ class Ui_TranscriptEditor(QMainWindow):
 
 
     def clearLayout(self, layout):
-      while layout.count():
-        child = layout.takeAt(0)
-        if child.widget():
-          child.widget().deleteLater()
+        while layout.count():
+            child = layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
 
     ## for hooking up buttons and stuff keep at bottom for function reading
     def setupUiManual(self):
@@ -832,15 +838,18 @@ class Ui_TranscriptEditor(QMainWindow):
         self.numchannels = numchannels
         self.setOldTranscriptText(transcripts, numchannels)
 
-        for i in range(numchannels+1):
-            self.plotOldSpec(transcripts, i)
+        #for i in range(numchannels+1):
+            #self.plotOldSpec(transcripts, i)
 
         self.initTranscriptEditor(transcripts, numchannels)
 
         # do prelim feature stuff, e.g. sample background noise
         for i in range(self.numchannels):
             self.oldTranscripts[i].findPauses()
-            self.oldTranscripts[i].sampleBackgroundNoise()
+
+
+            #self.oldTranscripts[i].sampleBackgroundNoise()
+
             #sound(normalize(self.oldTranscripts[i].backgroundNoise.T), self.oldTranscripts[i].sr, 'Background Speaker#'+str(i+1))
 
 
