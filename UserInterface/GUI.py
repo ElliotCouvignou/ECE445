@@ -518,8 +518,8 @@ class Ui_TranscriptEditor(QMainWindow):
             
         newshiftamt = shiftamt
         # loop through each transcript, find newstart index and do shifts
-        newmarks = [-1] * self.numchannels
-        oldmarks = [-1] * self.numchannels
+        newmarks = [0] * self.numchannels
+        oldmarks = [0] * self.numchannels
         for ti in range(self.numchannels):
             t = self.oldTranscripts[ti]
             # find marker idx
@@ -545,7 +545,7 @@ class Ui_TranscriptEditor(QMainWindow):
                     if(times[0] <= newend_t and times[1] >= newend_t):
                         newmarks[ti] = i
                     elif(times[1] <= newend_t and t.timestamps[i+1][0] >= newend_t):
-                        newmarks[ti] = i + 1
+                        newmarks[ti] = i
                 else:
                     # find oldstart
                     if(times[1] <= oldstart_t and t.timestamps[i+1][0] >= oldstart_t):
@@ -557,36 +557,52 @@ class Ui_TranscriptEditor(QMainWindow):
                         newmarks[ti] = i
                     elif(times[1] <= newstart_t and t.timestamps[i+1][1] >= newstart_t):
                         newmarks[ti] = i + 1
-
+            
+            # check last word
+            #find markers based on shift
+            i = t.wordCount-1;
+            if(shiftamt > 0):
+                # find oldend
+                if(times[0] <= oldend_t and times[1] >= oldend_t):
+                    oldmarks[ti] = i
+                # find newend mark 
+                # test clipping
+                if(times[0] <= newend_t and times[1] >= newend_t):
+                    newmarks[ti] = i
+            else:
+                # find oldstart
+                if(times[0] <= oldstart_t and times[1] >= oldstart_t):
+                    oldmarks[ti] = i - 1
+                # test clipping
+                if(times[0] <= newstart_t and times[1] >= newstart_t):
+                    newmarks[ti] = i
+                
             # check for edges
             if(shiftamt>0):
-                if(newmarks[ti]==-1):
-                    newmarks[ti] = t.wordCount-1
                 if(oldmarks[ti]==-1):
                     oldmarks[ti] = 0
             else:
                 if(newmarks[ti] == -1):
                     newmarks[ti] = 0
-                if(oldmarks[ti]==-1):
-                    oldmarks[ti] = t.wordCount-1 
 
-        #print('shiftamt: ', shiftamt)
-        #print('oldmarks: ', oldmarks)
-        #print('newmarks: ', newmarks)
+        print('shiftamt: ', shiftamt)
+        print('oldmarks: ', oldmarks)
+        print('newmarks: ', newmarks)
 
         shiftamt = newshiftamt
         # apply shifts 
-        for ti in range(self.numchannels):          
-            if(shiftamt > 0):
-                for i in range(oldmarks[ti], newmarks[ti]+1):
-                    tup = self.oldTranscripts[ti].timestamps[i]
-                    self.oldTranscripts[ti].timestamps[i] = (tup[0] - N, tup[1] - N)
-                    self.oldTranscripts[ti].shifts[i] -= N
-            else:
-                for i in range(newmarks[ti], oldmarks[ti]+1):
-                    tup = self.oldTranscripts[ti].timestamps[i]
-                    self.oldTranscripts[ti].timestamps[i] = (tup[0] + N, tup[1] + N)
-                    self.oldTranscripts[ti].shifts[i] += N
+        for ti in range(self.numchannels):   
+            if(newmarks[ti] != oldmarks[ti]):
+                if(shiftamt > 0):
+                    for i in range(oldmarks[ti], newmarks[ti]+1):
+                        tup = self.oldTranscripts[ti].timestamps[i]
+                        self.oldTranscripts[ti].timestamps[i] = (tup[0] - N, tup[1] - N)
+                        self.oldTranscripts[ti].shifts[i] -= N
+                else:
+                    for i in range(newmarks[ti], oldmarks[ti]+1):
+                        tup = self.oldTranscripts[ti].timestamps[i]
+                        self.oldTranscripts[ti].timestamps[i] = (tup[0] + N, tup[1] + N)
+                        self.oldTranscripts[ti].shifts[i] += N
             
         # apply shift to selected region
         for i in range(selectstart, selectend+1):
@@ -838,19 +854,17 @@ class Ui_TranscriptEditor(QMainWindow):
         self.numchannels = numchannels
         self.setOldTranscriptText(transcripts, numchannels)
 
-        #for i in range(numchannels+1):
-            #self.plotOldSpec(transcripts, i)
+        for i in range(numchannels+1):
+            self.plotOldSpec(transcripts, i)
 
         self.initTranscriptEditor(transcripts, numchannels)
 
         # do prelim feature stuff, e.g. sample background noise
         for i in range(self.numchannels):
             self.oldTranscripts[i].findPauses()
+            self.oldTranscripts[i].sampleBackgroundNoise()
 
-
-            #self.oldTranscripts[i].sampleBackgroundNoise()
-
-            #sound(normalize(self.oldTranscripts[i].backgroundNoise.T), self.oldTranscripts[i].sr, 'Background Speaker#'+str(i+1))
+            
 
 
 

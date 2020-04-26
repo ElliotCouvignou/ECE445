@@ -150,7 +150,7 @@ class Transcript():
                     
                 l = len(sliced)
                 if(curidx+l >= maxBGNlength):
-                    l = maxBGNlength - curidx - 1
+                    l = maxBGNlength - curidx
 
                 if(self.isMono):
                     self.backgroundNoise[curidx:curidx+l-1] = sliced[:l-1]
@@ -163,7 +163,7 @@ class Transcript():
                     break
         
         self.backgroundNoise = self.backgroundNoise[:curidx]
-
+        
         self.enableBackgroundNoiseFill = True
 
     # creates main channel type transcript from others. Basically combines them
@@ -358,7 +358,7 @@ class Transcript():
         time = self.timestamps
         
         # ATM doinglinear crossfade (75ms) via np.linspace
-        delay_ms = round(.075 * self.sr) # 75 ms for now. based on feel, FOR WINDOWING
+        delay_ms = round(.100 * self.sr) # 75 ms for now. based on feel, FOR WINDOWING
 
         # loop through each word, if shifts[i] !=0 then edit audio array to shift word slice
         for i in range(len(self.words)):
@@ -384,8 +384,14 @@ class Transcript():
                     #mono/stereo pad cases
                     if(self.isStereo):
                         pad = np.zeros(l*2).reshape(2,l)
+                         
                     else:
                         pad = np.zeros(l)
+
+                    # BACKGROUND FILL HERE
+                    if(self.enableBackgroundNoiseFill and RenderSettings.backgroundFillEnable):
+                        self.renderBackgroundNoiseFill(pad)
+
                     if(renderlen == 0):
                         render = pad
                     else:
@@ -462,19 +468,27 @@ class Transcript():
                 # move sliced audio and zero pad empty space
                 if(self.isStereo):
                     render[:, newstart_n:newend_n] += sliced
-                    
-                    if(self.enableBackgroundNoiseFill and RenderSettings.backgroundFillEnable):
-                        self.renderBackgroundNoiseFill(render[:, oldstart_n:oldend_n])                        
-                    else:                       
-                        render[:, oldstart_n:oldend_n] -= sliced
+                    render[:, oldstart_n:oldend_n] -= sliced
 
+                    # check if old spot is just zeros, if so then bg fill
+                    if(self.enableBackgroundNoiseFill and RenderSettings.backgroundFillEnable):
+                        diffs = render[:,oldstart_n:oldend_n] - np.zeros((2,oldend_n-oldstart_n))
+                        val = np.sum(diffs)            
+                        if(abs(val) < 0.01):
+                            self.renderBackgroundNoiseFill(render[:, oldstart_n:oldend_n])           
+                    
                 else:
                     render[newstart_n:newend_n] += sliced
+                    render[oldstart_n:oldend_n] -= sliced
 
+                    # check if old spot is just zeros, if so then bg fill
                     if(self.enableBackgroundNoiseFill and RenderSettings.backgroundFillEnable):
-                        self.renderBackgroundNoiseFill(render[:, oldstart_n:oldend_n])                        
-                    else:                        
-                        render[:, oldstart_n:oldend_n] -= sliced
+                        diffs = render[oldstart_n:oldend_n] - np.zeros((oldend_n-oldstart_n))
+                        val = np.sum(diffs)            
+                        if(abs(val) < 0.01):
+                            self.renderBackgroundNoiseFill(render[:, oldstart_n:oldend_n])
+
+                        
 
         self.lastRender = render.T
 
@@ -483,7 +497,7 @@ class Transcript():
     def renderBackgroundNoiseFill(self, renderslice):
         length = renderslice.shape[1]
         maxBGNlength = self.backgroundNoise.shape[0]
-        delay_ms = round(.075 * self.sr) # 75 ms for now. based on feel, FOR WINDOWING
+        delay_ms = round(.045 * self.sr) # 75 ms for now. based on feel, FOR WINDOWING
 
         curlength = 0
         while(curlength < length):
@@ -492,12 +506,18 @@ class Transcript():
             if(curlength != 0):
                 lennoise += delay_ms
 
-            start = random.randint(0, maxBGNlength-1)
+            start = random.randint(0, maxBGNlength-lennoise);
             end = (start + lennoise) % maxBGNlength
             if(end < start):
-                noise = np.concatenate((self.backgroundNoise[start:], self.backgroundNoise[:end]), axis=0)
+                if(self.isMono):
+                    noise = np.concatenate((self.backgroundNoise[start:], self.backgroundNoise[:end]), axis=0)
+                else:
+                    noise = np.concatenate((self.backgroundNoise[start:,:], self.backgroundNoise[:end,:]), axis=0)
             else:
-                noise = self.backgroundNoise[start:end]
+                if(self.isMono):
+                    noise = self.backgroundNoise[start:end]
+                else:
+                    noise = self.backgroundNoise[start:end,:]
             noise = noise.T
             # window both ends of noise 
             if(self.isMono):
@@ -509,8 +529,13 @@ class Transcript():
 
             if(curlength != 0):
                 curlength -= delay_ms # left shift by delay to overlap crossfades
-            renderslice[curlength:curlength+lennoise] = noise
 
+            if(self.isMono):
+                lennoise = len(noise)
+                renderslice[curlength:curlength+lennoise] += noise
+            else:
+                lennoise = noise.shape[1]
+                renderslice[:,curlength:curlength+lennoise] += noise
             curlength += lennoise
         
     def setAudioAsRender(self):
